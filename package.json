@@ -1,0 +1,22 @@
+{
+  "name": "gotodevin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KilliKrate/GoTodeVin.git"
+  },
+  "author": "G36",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KilliKrate/GoTodeVin/issues"
+  },
+  "homepage": "https://github.com/KilliKrate/GoTodeVin#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
