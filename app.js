@@ -193,7 +193,7 @@ app.get('/catalogo/dettaglio/:name', function (req, res) {
 //ASSISTENZA
 
 app.get('/assistenza', function (req, res) {
-    let sql = "SELECT * FROM Assistenza"; //VERIFICARE NOME TABELLA
+    let sql = "SELECT * FROM Operatori"; 
     res.send(db.prepare(sql).all());
 });
 
@@ -206,7 +206,7 @@ app.get('/ordini/:email', function (req,res) {
 
 app.get('/ordini/dettaglio/:id', function (req,res) {
     let idOrdine = req.params.id;
-    let sql = "SELECT * FROM `composto da` WHERE id_ordine="+idOrdine;
+    let sql = "SELECT * FROM Ordini_Vini WHERE ordine="+idOrdine;
     let vini = db.prepare(sql).all();
 
     sql = "SELECT * FROM Ordini WHERE id="+idOrdine+" LIMIT 1";
@@ -219,12 +219,17 @@ app.get('/ordini/dettaglio/:id', function (req,res) {
 
 //CARRELLO
 
+app.get('/carrello/:email', function(req, res) {
+    let sql = "SELECT * FROM Acquistabili WHERE cliente ='"+req.params.email+"'";
+    res.send(db.prepare(sql).all());
+});
+
 app.post('/carrello/modifica', function (req, res) { //dovrei fare una seconda funzione dedicata per l'eliminazione?
     let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql=true;
 
-    if (quantita = 0) sql = "DELETE FROM `in carrello` WHERE nome_vino="+nomeVino+" AND proprietario = '"+utente+"'";
+    if (quantita = 0) sql = "DELETE FROM Acquistabili WHERE vino="+nomeVino+" AND cliente = '"+utente+"'";
     else {
-        if (verificaDisponibilita(quantita, nomeVino)) sql = "UPDATE `in carrello` SET quantita="+quantita+" WHERE nome_vino='"+nomeVino+"' AND proprietario = '"+utente+"'";
+        if (verificaDisponibilita(quantita, nomeVino)) sql = "UPDATE Acquistabili SET quantita="+quantita+" WHERE vino='"+nomeVino+"' AND cliente = '"+utente+"'";
         else {
             res.send("disponibilità insufficiente");
             eseguiSql= false;
@@ -238,7 +243,7 @@ app.post('/carrello/modifica', function (req, res) { //dovrei fare una seconda f
 
 app.delete('/carrello/modifica', function (req, res) {
     let nomeVino = req.body['nomeVino'], utente = req.body['email'];
-    let sql = "DELETE FROM `in carrello` WHERE nome_vino='"+nomeVino+"' AND proprietario = '"+utente+"'";
+    let sql = "DELETE FROM Acquistabili WHERE vino='"+nomeVino+"' AND cliente = '"+utente+"'";
     db.prepare(sql);
 });
 
@@ -246,22 +251,25 @@ app.post('/carrello/aggiungi', function (req,res){
     let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql=true;
     if(quantita==0) req.send("aggiunti 0 vini al carrello")
     else {
-        sql = "INSER INTO `in carrello` (nome_vino, proprietario, quantita) VALUES ('"+nomeVino+"', '"+utente+"', "+quantita;
+        sql = "INSER INTO Acquistabili (vino, cliente, quantita) VALUES ('"+nomeVino+"', '"+utente+"', "+quantita;
         db.prepare(sql);
     }
 });
 
-app.get('/carrello/preordina', function (req, res) {
-    let utente = req.body['email'], aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
-    let prodotti = db.prepare("SELECT * FROM `in carrello` WHERE proprietario='"+utente+"'").all();
+app.post('/carrello/(pre)ordina/', function (req, res) { // DA FINIRE
+    let utente = req.body.email, tipo = req.body.tipo, aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
+    let prodotti = db.prepare("SELECT * FROM Acquistabili WHERE cliente='"+utente+"'").all();
     prodotti.forEach((elem)=>{
         if(!verificaDisponibilita(elem['quantita'],elem['nome_vino'])){
             aggiungiPreordine=false;
             viniMancanti+=" "+elem['nome_vino'];
         }
-    })
+    });
     if (aggiungiPreordine) {
-        //aggiungi
+        db.prepare("INSERT INTO Ordini VALUES ('"+tipo+"', )")
+        prodotti.forEach((elem)=>{
+            db.prepare("INSERT INTO ");
+        });
     }else{
         res.send(viniMancanti)
     }
