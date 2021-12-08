@@ -1,6 +1,9 @@
 var express = require('express');
 var app = express();
 
+app.use('/resources', express.static(__dirname + '/resources'));
+
+
 var cors = require('cors');
 app.use(cors());
 
