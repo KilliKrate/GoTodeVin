@@ -7,12 +7,51 @@
     <title>Hello, world!</title>
 </head>
 
-<body>
+<body class="d-flex flex-row">
 
     <%- include('./partials/sidenav.ejs') %>
 
+    <div class="p-5 w-100">
+        <table id="example" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Annata</th>
+                    <th>Prezzo</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
     <%- include('./partials/bottom_scripts.ejs') %>
 
+    <script>
+        async function initTable() {
+            const response = await fetch('http://localhost:8080/catalogo/vini')
+
+            if (response.status === 200) {
+                let res = await response.json();
+
+                console.log(res);
+
+                $('#example').DataTable({
+                    data: res,
+                    columns: [{
+                            data: 'nome'
+                        },
+                        {
+                            data: 'annata'
+                        },
+                        {
+                            data: 'prezzo'
+                        },
+                    ]
+                });
+            }
+        }
+
+        initTable();
+    </script>
 </body>
 
 </html>

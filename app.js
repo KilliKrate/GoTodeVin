@@ -3,6 +3,8 @@ var app = express();
 
 app.use('/resources', express.static(__dirname + '/resources'));
 
+//var jquery = require('jquery');
+//var datatables = require('datatables.net-bs5')();
 
 var cors = require('cors');
 app.use(cors());
@@ -95,63 +97,16 @@ function verificaDisponibilita(quantita, nome) {
  *                     type: integer
  *                     description: annata del vino.
  *                     example: 2015
+ *                   prezzo:
+ *                     type: float
+ *                     description: prezzo del vino.
+ *                     example: 15.3
  */
 app.get('/catalogo/vini', function (req, res) {
-    let sql = "SELECT nome, annata FROM Vini WHERE disponibilita > 0";
+    let sql = "SELECT nome, annata, prezzo FROM Vini WHERE disponibilita > 0";
     res.send(db.prepare(sql).all());
 });
 
-/**
- * @swagger
- * /catalogo/ricerca/{nome vino}&{annata}:
- *   get:
- *     summary: lista dei vini disponibili ricercati.
- *     description: recupera dal database i vini che sono disponibili nel magazzino e che rispettano i criteri di ricerca, 
- *                  posso avere uno dei due criteri non specificati mettendo in nome la stringa NONE o 0 in annata.
- *     parameters:
- *       - in: path
- *         name: nome vino
- *         schema:
- *           type: string
- *           description: Il nome del vino.
- *           example: sauvignon
- *       - in: path
- *         name: annata
- *         schema:
- *           type: integer
- *           description: annata del vino.
- *           example: 2015
- *         required: true
- *         description: parametri di ricerca
- *     responses:
- *       200:
- *         description: Lista dei nomi dei vini corrispondenti ai criteri di ricerca.
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   nome:
- *                     type: string
- *                     description: Il nome del vino.
- *                     example: sauvignon
- *                   annata:
- *                     type: integer
- *                     description: annata del vino.
- *                     example: 2015
- */
-app.get('/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VINI???
-    let sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0"; //assumo che questa funzione non possa essere chiamata senza almeno un criterio di ricerca
-
-    let nome = req.params.nome, annata = req.params.annata;
-    if (nome != "NONE") {
-        sql += " AND nome LIKE '%" + nome + "%'"; //NON DEVE ESSERE ESATTAMENTE QUELLO
-    }
-    if (annata != 0) sql += " AND annata = " + annata;
-    res.send(db.prepare(sql).all());
-});
 
 /**
  * @swagger
@@ -194,7 +149,7 @@ app.get('/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VINI??
  *                     example: 52
  *                   prezzo:
  *                     type: float
- *                     description: prezzo al litro del vino.
+ *                     description: prezzo del vino.
  *                     example: 15.3
  */
 app.get('/catalogo/dettaglio/:name', function (req, res) {
