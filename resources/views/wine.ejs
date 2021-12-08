@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+
+<% 
+var res;
+try {
+    res = data;
+} catch(err) {
+}
+ %>
+
+<head>
+    <%- include('./partials/head.ejs') %>
+    <title><%= res.nome %></title>
+</head>
+
+<body class="d-flex flex-row">
+
+    <%- include('./partials/sidenav.ejs') %>
+
+    <div class="p-5">
+        <a href="/" class="h5 mb-5">
+            <span class="px-2"><i class="fa fa-arrow-left" aria-hidden="true"></i></span>Torna al catalogo
+        </a>
+        <h1 class="display-5 mt-3 mb-5"><%= res.nome %></h1>
+
+        <div class="d-md-flex justify-content-between">
+            <img src="resources/images/wine.jpg" alt="wine" style="object-fit: contain;" class="mw-100 mb-5">
+            <div class="d-flex flex-column px-md-5 justify-between">
+                <p class="lead"><strong><%= res.descrizione %></strong></p>
+                <p class="h3"><%= res.prezzo %>€</p>
+            </div>
+        </div>
+
+    </div>
+
+    <%- include('./partials/bottom_scripts.ejs') %>
+
+</body>
+
+<script>
+</script>
+
+</html>

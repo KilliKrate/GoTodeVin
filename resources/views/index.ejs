@@ -32,8 +32,6 @@
             if (response.status === 200) {
                 let res = await response.json();
 
-                console.log(res);
-
                 $('#example').DataTable({
                     data: res,
                     columns: [{

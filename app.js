@@ -61,6 +61,12 @@ app.get('/', (req, res) => {
     res.render('index')
 })
 
+app.get('/:name', (req, res) => {
+    let sql = "SELECT * FROM Vini WHERE nome = '" + req.params.name + "'";
+    const data = db.prepare(sql).all()[0];
+    res.render('wine', { data });
+})
+
 
 /* APIs*/
 
@@ -153,7 +159,7 @@ app.get('/catalogo/vini', function (req, res) {
  *                     example: 15.3
  */
 app.get('/catalogo/dettaglio/:name', function (req, res) {
-    let sql = "SELECT * FROM Vini WHERE nome = '" + req.params.name + "'"; //VINI O VINO?
+    let sql = "SELECT * FROM Vini WHERE nome = '" + req.params.name + "'";
     res.send(db.prepare(sql).all());
 });
 
