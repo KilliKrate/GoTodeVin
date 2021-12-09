@@ -80,7 +80,7 @@ function verificaDisponibilita(quantita, nome) {
 
 /**
  * @swagger
- * /catalogo/vini:
+ * /api/catalogo/vini:
  *   get:
  *     summary: lista dei vini disponibili.
  *     description: recupera dal database i vini che sono disponibili nel magazzino.
@@ -107,15 +107,59 @@ function verificaDisponibilita(quantita, nome) {
  *                     description: prezzo del vino.
  *                     example: 15.3
  */
-app.get('/catalogo/vini', function (req, res) {
+app.get('/api/catalogo/vini', function (req, res) {
     let sql = "SELECT nome, annata, prezzo FROM Vini WHERE disponibilita > 0";
     res.send(db.prepare(sql).all());
 });
 
+/**
+ * @swagger
+ * /api/catalogo/ricerca/{nome vino}&{annata}:
+ *   get:
+ *     summary: lista dei vini disponibili ricercati.
+ *     description: recupera dal database i vini che sono disponibili nel magazzino e che rispettano i criteri di ricerca, 
+ *                  posso avere uno dei due criteri non specificati mettendo in nome la stringa NONE o 0 in annata.
+ *     parameters:
+ *       - in: path
+ *         name: nome vino
+ *         schema:
+ *           type: string
+ *           description: Il nome del vino.
+ *           example: sauvignon
+ *       - in: path
+ *         name: annata
+ *         schema:
+ *           type: integer
+ *           description: annata del vino.
+ *           example: 2015
+ *         required: true
+ *         description: parametri di ricerca
+ *     responses:
+ *       200:
+ *         description: Lista dei nomi dei vini corrispondenti ai criteri di ricerca.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   nome:
+ *                     type: string
+ *                     description: Il nome del vino.
+ *                     example: sauvignon
+ *                   annata:
+ *                     type: integer
+ *                     description: annata del vino.
+ *                     example: 2015
+ */
+ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VINI???
+    let sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0"; //assumo che questa funzione non possa essere chiamata senza almeno un criterio di ricerca
+ });
 
 /**
  * @swagger
- * /catalogo/dettaglio/{nome}:
+ * /api/catalogo/dettaglio/{nome}:
  *   get:
  *     summary: dettaglio vino.
  *     description: recupera dal database i dettagli di un vino.
@@ -139,7 +183,7 @@ app.get('/catalogo/vini', function (req, res) {
  *                   nome:
  *                     type: string
  *                     description: Il nome del vino.
- *                     example: sauvignon
+ *                     example: Sauvignon
  *                   annata:
  *                     type: integer
  *                     description: annata del vino.
@@ -157,26 +201,179 @@ app.get('/catalogo/vini', function (req, res) {
  *                     description: prezzo del vino.
  *                     example: 15.3
  */
-app.get('/catalogo/dettaglio/:name', function (req, res) {
+app.get('/api/catalogo/dettaglio/:name', function (req, res) {
     let sql = "SELECT * FROM Vini WHERE nome = '" + req.params.name + "'";
     res.send(db.prepare(sql).all());
 });
 
 //ASSISTENZA
 
-app.get('/assistenza', function (req, res) {
+/**
+ * @swagger
+ * /api/assistenza:
+ *   get:
+ *     summary: dettagli assistenza.
+ *     description: recupera le informazioni necessarie a mostrare i numeri di assistenza.
+ *     responses:
+ *       200:
+ *         description: dati per assistenza.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   contatto:
+ *                     type: string
+ *                     description: numero per whatsapp o link a telegram o email.
+ *                     example: 1564684343
+ *                   applicazione:
+ *                     type: string
+ *                     description: tipo applicazione da cui aprire il contatto.
+ *                     example: Whatsapp
+ */
+app.get('/api/assistenza', function (req, res) {
     let sql = "SELECT * FROM Operatori";
     res.send(db.prepare(sql).all());
 });
 
 //ORDINI
 
-app.get('/ordini/:email', function (req, res) {
+/**
+ * @swagger
+ * /api/ordini/{email}:
+ *   get:
+ *     summary: ordini.
+ *     description: recupera dal database gli ordini di un cliente. Fa inoltre il controllo della scadenza degli ordini e dei preordini
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: la mail dell'utente che sta richiedendo i propri ordini
+ *     responses:
+ *       200:
+ *         description: elenco degli ordini.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: L'id dell'ordine o preordine.
+ *                     example: 5
+ *                   tipo:
+ *                     type: string
+ *                     description: O per gli ordini P per i preordini.
+ *                     example: O
+ *                   stato:
+ *                     type: string
+ *                     description: stato dell'ordine che identifica in che fase della sua vita si trova.
+ *                     example: inLavorazione
+ *                   data_creazione:
+ *                     type: string
+ *                     description: data creazione.
+ *                     example: 2021-11-28T15:48:56.000
+ *                   data_ritirabile:
+ *                     type: string
+ *                     description: data di quando l'ordine è stato inserito nel locker ed è in attesa di essere rimosso.
+ *                     example: 2021-11-28T15:58:56.000
+ */
+app.get('/api/ordini/:email', function (req, res) {
     let sql = "SELECT id, tipo, stato, data_creazione, data_ritirabile FROM Ordini WHERE proprietario='" + req.params.email + "'";
-    res.send(db.prepare(sql).all());
-})
+    let ordini = db.prepare(sql).all();
 
-app.get('/ordini/dettaglio/:id', function (req, res) {
+    ordini.forEach((elem) =>{
+        let dateParts = elem.data_creazione;
+        let jsDate = new Date(dataParts+"Z"); // NON SO SE FUNZIONA
+        let dataPresente = new Date();
+        if(elem.tipo == 'P' && dataPresente - jsDate > 21600000) {
+            db.prepare("DELETE FROM Ordini WHERE id="+elem.id);
+
+            let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine="+elem.id).all();
+            vini.forEach((elem)=>{
+                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'");
+            });
+
+            db.prepare("DELETE FROM Ordini_Vini WHERE ordine="+elem.id);
+        }
+
+        dateParts = elem.data_ritirabile;
+        jsDate = new Date(dataParts+"Z"); // NON SO SE FUNZIONA
+        if(elem.tipo == 'O' && dataPresente - jsDate > 300000 && elem.stato=="daRitirare"){
+            let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine="+elem.id).all();
+            vini.forEach((elem)=>{
+                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'");
+            });
+            db.prepare("UPDATE Ordini SET stato='scaduto' WHERE id="+elem.id);
+        }
+    });
+
+    res.send(db.prepare(sql).all());
+});
+
+/**
+ * @swagger
+ * /api/ordini/dettaglio/{idOrdine}:
+ *   get:
+ *     summary: dettaglio ordini.
+ *     description: recupera dal database i dettagli di un ordine.
+ *     parameters:
+ *       - in: path
+ *         name: idOrdine
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: l'id dell'ordine di cui voglio ottenere più informazioni
+ *     responses:
+ *       200:
+ *         description: dettagli degli ordini.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: L'id dell'ordine o preordine.
+ *                     example: 5
+ *                   tipo:
+ *                     type: string
+ *                     description: O per gli ordini P per i preordini.
+ *                     example: O
+ *                   qr:
+ *                     type: string
+ *                     description: path all'immagine contenente il QR.
+ *                     example: localhost:8080/resources/images/qr.png
+ *                   locker:
+ *                     type: integer
+ *                     description: numero del locker in cui l'ordine è stato inserito.
+ *                     example: O
+ *                   stato:
+ *                     type: string
+ *                     description: stato dell'ordine che identifica in che fase della sua vita si trova.
+ *                     example: inLavorazione
+ *                   data_creazione:
+ *                     type: string
+ *                     description: data creazione.
+ *                     example: 2021-11-28T15:48:56.000
+ *                   data_ritirabile:
+ *                     type: string
+ *                     description: data di quando l'ordine è stato inserito nel locker ed è in attesa di essere ritirato.
+ *                     example: 2021-11-28T15:58:56.000
+ *                   data_ritirato:
+ *                     type: string
+ *                     description: data di quando l'ordine è stato ritirato.
+ *                     example: 2021-11-28T16:00:56.000
+ */
+app.get('/api/ordini/dettaglio/:id', function (req, res) {
     let idOrdine = req.params.id;
     let sql = "SELECT * FROM Ordini_Vini WHERE ordine=" + idOrdine;
     let vini = db.prepare(sql).all();
@@ -187,16 +384,83 @@ app.get('/ordini/dettaglio/:id', function (req, res) {
     ordine[0].items = vini;
 
     res.send(ordine);
-})
+});
 
 //CARRELLO
 
-app.get('/carrello/:email', function (req, res) {
-    let sql = "SELECT * FROM Acquistabili WHERE cliente ='" + req.params.email + "'";
+/**
+ * @swagger
+ * /api/carrello/{email}:
+ *   get:
+ *     summary: carrello.
+ *     description: recupera dal database i vini presenti nel carrello di un cliente
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: la mail dell'utente che sta richiedendo il proprio carrello
+ *     responses:
+ *       200:
+ *         description: elenco vini con relativa quantità.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   vino:
+ *                     type: string
+ *                     description: nome del vino.
+ *                     example: Sauvignon
+ *                   quantita:
+ *                     type: integer
+ *                     description: quantità in carrello.
+ *                     example: 15
+ */
+app.get('/api/carrello/:email', function (req, res) {
+    let sql = "SELECT vino,quantita FROM Acquistabili WHERE cliente ='" + req.params.email + "'";
     res.send(db.prepare(sql).all());
 });
 
-app.post('/carrello/modifica', function (req, res) { //dovrei fare una seconda funzione dedicata per l'eliminazione?
+/**
+ * @swagger
+ * /api/carrello/modifica:
+ *   post:
+ *     summary: modifica carrello.
+ *     description: modifica la quantità per un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con l'ordine
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantita:
+ *                  type: integer
+ *                  description: quantità dell'elemento da cambiare.
+ *                  example: 10
+ *               nomeVino:
+ *                  type: string
+ *                  description: il nome del vino a cui si riferisce la modifica.
+ *                  example: Sauvignon
+ *               email:
+ *                  type: string
+ *                  description: il cliente che ha richiesto la modifica
+ *                  example: RobbieJLavender@dayrep.com
+ *     responses:
+ *       200:
+ *         description: elenco degli ordini.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: modifica avvenuta
+ */
+app.post('/api/carrello/modifica', function (req, res) { //dovrei fare una seconda funzione dedicata per l'eliminazione?
     let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql = true;
 
     if (quantita = 0) sql = "DELETE FROM Acquistabili WHERE vino=" + nomeVino + " AND cliente = '" + utente + "'";
@@ -210,16 +474,17 @@ app.post('/carrello/modifica', function (req, res) { //dovrei fare una seconda f
 
     if (eseguiSql) {
         db.prepare(sql);
+        res.send("modifica avvenuta");
     }
 });
 
-app.delete('/carrello/modifica', function (req, res) {
+app.delete('/api/carrello/modifica', function (req, res) {
     let nomeVino = req.body['nomeVino'], utente = req.body['email'];
     let sql = "DELETE FROM Acquistabili WHERE vino='" + nomeVino + "' AND cliente = '" + utente + "'";
     db.prepare(sql);
 });
 
-app.post('/carrello/aggiungi', function (req, res) {
+app.post('/api/carrello/aggiungi', function (req, res) {
     let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql = true;
     if (quantita == 0) req.send("aggiunti 0 vini al carrello")
     else {
@@ -228,7 +493,7 @@ app.post('/carrello/aggiungi', function (req, res) {
     }
 });
 
-app.post('/carrello/pre-ordina/', function (req, res) { // DA FINIRE
+app.post('/api/carrello/pre-ordina/', function (req, res) { // DA FINIRE
     let utente = req.body.email, tipo = req.body.tipo, aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
     let prodotti = db.prepare("SELECT * FROM Acquistabili WHERE cliente='" + utente + "'").all();
     prodotti.forEach((elem) => {
@@ -237,15 +502,62 @@ app.post('/carrello/pre-ordina/', function (req, res) { // DA FINIRE
             viniMancanti += " " + elem['nome_vino'];
         }
     });
-    if (aggiungiPreordine) {
-        db.prepare("INSERT INTO Ordini VALUES ('" + tipo + "', )")
+    if (aggiungiPreordine) {    
+        db.prepare("DELETE FROM Acquistabili WHERE cliente='"+utente+"'");
+
+        if(tipo == 'O') stato="inLavorazione";
+        else stato="attesaPagamento"
+        db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '"+stato+"', "+new Date().toISOString().replace('Z', '')+", cliente='"+utente+"'");
+        let id = db.prepare("SELECT id FROM Ordini WHERE cliente='"+utente+"' ORDER BY id DESC LIMIT 1").all()[0].id;
+        //NON SO SE FUNZIONA L'INSERIMENTO DELLA DATA
+
         prodotti.forEach((elem) => {
-            db.prepare("INSERT INTO ");
+            db.prepare("INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES ('"+elem.nome+"', "+id+", "+elem.quantita+")");
+            db.prepare("UPDATE Vini SET disponibilita=disponibilita-"+elem.quantita+" WHERE nome='"+elem.nome+"'");
         });
+        res.send("ordine creato correttamente")
     } else {
         res.send(viniMancanti)
     }
 });
+
+//WALLET
+
+app.get('/api/wallet/saldo/:email', function (req, res) {
+    res.send(db.prepare("SELECT saldo FROM Clienti WHERE email='"+req.params.email+"'").all());
+});
+
+app.post('/api/wallet/ricarica', function (req,res) {
+    db.prepare("UPDATE Clienti SET saldo=saldo"+req.body.ricarica+" WHERE cliente='"+req.body.email+"'");
+    res.send("ricarica effettuata");
+});
+
+//PREORDINE  QUANDO FACCIO IL CONTROLLO DELLA SCADENZA?
+
+app.post('/api/preordine/converti', function (req,res) {
+    db.prepare("UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id="+req.body.id);
+});
+
+//PRODUTTORE
+
+app.get('/api/ordini/dettaglio_tutti', function (req, res) {
+    let idOrdine = req.params.id;
+    
+    sql = "SELECT * FROM Ordini";
+    let ordine = db.prepare(sql).all();
+
+    ordine.forEach( (elem, ind) => {
+        let sql = "SELECT * FROM Ordini_Vini WHERE ordine=" + elem.id;
+        let vini = db.prepare(sql).all();
+        ordine[ind].items = vini;
+    });
+
+    res.send(ordine);
+});
+
+//GESTIONALE
+
+
 
 app.listen(8080, function () {
     console.log('GoTodeVin listening on port 8080!');
