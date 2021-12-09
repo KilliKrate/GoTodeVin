@@ -59,14 +59,13 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 
 app.get('/', (req, res) => {
     res.render('index')
-})
+});
 
 app.get('/:name', (req, res) => {
     let sql = "SELECT * FROM Vini WHERE nome = '" + req.params.name + "'";
     const data = db.prepare(sql).all()[0];
     res.render('wine', { data });
-})
-
+});
 
 /* APIs*/
 
