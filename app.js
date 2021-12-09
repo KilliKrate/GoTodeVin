@@ -70,6 +70,7 @@ app.get('/:name', (req, res) => {
 /* APIs*/
 
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
+//todo: codici di ritorno personalizzati
 
 function verificaDisponibilita(quantita, nome) {
     db.all("SELECT disponibilita FROM Vini WHERE nome=\"" + nome + "\"", (err, rows) => {
@@ -295,14 +296,14 @@ app.get('/api/ordini/:email', function (req, res) {
         let jsDate = new Date(dataParts+"Z"); // NON SO SE FUNZIONA
         let dataPresente = new Date();
         if(elem.tipo == 'P' && dataPresente - jsDate > 21600000) {
-            db.prepare("DELETE FROM Ordini WHERE id="+elem.id);
+            db.prepare("DELETE FROM Ordini WHERE id="+elem.id).run();
 
             let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine="+elem.id).all();
             vini.forEach((elem)=>{
-                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'");
+                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'").run();
             });
 
-            db.prepare("DELETE FROM Ordini_Vini WHERE ordine="+elem.id);
+            db.prepare("DELETE FROM Ordini_Vini WHERE ordine="+elem.id).run();
         }
 
         dateParts = elem.data_ritirabile;
@@ -310,9 +311,9 @@ app.get('/api/ordini/:email', function (req, res) {
         if(elem.tipo == 'O' && dataPresente - jsDate > 300000 && elem.stato=="daRitirare"){
             let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine="+elem.id).all();
             vini.forEach((elem)=>{
-                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'");
+                db.prepare("UPDATE Vini SET disponibilita=disponibilita+"+elem.quantita+" WHERE nome='"+elem.vino+"'").run();
             });
-            db.prepare("UPDATE Ordini SET stato='scaduto' WHERE id="+elem.id);
+            db.prepare("UPDATE Ordini SET stato='scaduto' WHERE id="+elem.id).run();
         }
     });
 
@@ -475,7 +476,7 @@ app.get('/api/carrello/:email', function (req, res) {
  *                description: risultato operazione
  *                example: modifica avvenuta
  */
-app.post('/api/carrello/modifica', function (req, res) { //dovrei fare una seconda funzione dedicata per l'eliminazione?
+app.post('/api/carrello/modifica', function (req, res) {
     let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql = true;
 
     if (quantita = 0) sql = "DELETE FROM Acquistabili WHERE vino=" + nomeVino + " AND cliente = '" + utente + "'";
@@ -488,7 +489,7 @@ app.post('/api/carrello/modifica', function (req, res) { //dovrei fare una secon
     }
 
     if (eseguiSql) {
-        db.prepare(sql);
+        db.prepare(sql).run();
         res.send("modifica avvenuta");
     }
 });
@@ -527,7 +528,7 @@ app.post('/api/carrello/modifica', function (req, res) { //dovrei fare una secon
 app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA RISPOSTA PARTICOLARE SE IL VINO NON C'ERA NEL CARRELLO?
     let nomeVino = req.body['nomeVino'], utente = req.body['email'];
     let sql = "DELETE FROM Acquistabili WHERE vino='" + nomeVino + "' AND cliente = '" + utente + "'";
-    db.prepare(sql);
+    db.prepare(sql).run();
     res.send("eliminato");
 });
 
@@ -570,7 +571,7 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
         if (esiste.length !=0) res.send("vino già presente");
         else{
             sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES ('" + nomeVino + "', '" + utente + "', " + quantita+")";
-            db.prepare(sql);
+            db.prepare(sql).run();
             res.send("aggiunto");
         }
     }
@@ -617,17 +618,17 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
         }
     });
     if (aggiungiPreordine) {    
-        db.prepare("DELETE FROM Acquistabili WHERE cliente='"+utente+"'");
+        db.prepare("DELETE FROM Acquistabili WHERE cliente='"+utente+"'").run();
 
         if(tipo == 'O') stato="inLavorazione";
         else stato="attesaPagamento"
-        db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '"+stato+"', "+new Date().toISOString().replace('Z', '')+", cliente='"+utente+"')");
+        db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '"+stato+"', "+new Date().toISOString().replace('Z', '')+", cliente='"+utente+"')").run();
         let id = db.prepare("SELECT id FROM Ordini WHERE cliente='"+utente+"' ORDER BY id DESC LIMIT 1").all()[0].id;
         //NON SO SE FUNZIONA L'INSERIMENTO DELLA DATA
 
         prodotti.forEach((elem) => {
-            db.prepare("INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES ('"+elem.nome+"', "+id+", "+elem.quantita+")");
-            db.prepare("UPDATE Vini SET disponibilita=disponibilita-"+elem.quantita+" WHERE nome='"+elem.nome+"'");
+            db.prepare("INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES ('"+elem.nome+"', "+id+", "+elem.quantita+")").run();
+            db.prepare("UPDATE Vini SET disponibilita=disponibilita-"+elem.quantita+" WHERE nome='"+elem.nome+"'").run();
         });
         res.send("ordine creato")
     } else {
@@ -701,7 +702,7 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *                example: ricarica effettuata
  */
 app.post('/api/wallet/ricarica', function (req,res) {
-    db.prepare("UPDATE Clienti SET saldo=saldo"+req.body.ricarica+" WHERE cliente='"+req.body.email+"'");
+    db.prepare("UPDATE Clienti SET saldo=saldo"+req.body.ricarica+" WHERE cliente='"+req.body.email+"'").run();
     res.send("ricarica effettuata");
 });
 
@@ -736,7 +737,7 @@ app.post('/api/wallet/ricarica', function (req,res) {
  */
 app.post('/api/preordine/converti', function (req,res) {
     //todo: VERIFICA CHE NON SIA SCADUTO
-    db.prepare("UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id="+req.body.id);
+    db.prepare("UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id="+req.body.id).run();
     res.send("ordine creato")
 });
 
@@ -805,7 +806,7 @@ app.post('/api/preordine/converti', function (req,res) {
  *                           example: 15
  */
 app.get('/api/ordini/dettaglio_tutti', function (req, res) {
-    sql = "SELECT * FROM Ordini";
+    let sql = "SELECT * FROM Ordini";
     let ordine = db.prepare(sql).all();
 
     ordine.forEach( (elem, ind) => {
@@ -819,7 +820,55 @@ app.get('/api/ordini/dettaglio_tutti', function (req, res) {
 
 //GESTIONALE
 
-
+/**
+ * @swagger
+ * /api/gestionale/giacenza:
+ *   post:
+ *     summary: giacenza.
+ *     description: modifica la disponibilità di un vino.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantita:
+ *                  type: integer
+ *                  description: nuova disponibilità del vino
+ *                  example: 156
+ *               nomeVino:
+ *                  type: string
+ *                  description: nome del vino a cui modificare la disponibilità
+ *                  example: Sauvignon
+ *     responses:
+ *       200:
+ *         description: operazione avvenuta.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: Vino specificato modificato
+ *       400:
+ *         description: dati errati.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: la quantità specificata non è valida
+ */
+app.post('/api/gestionale/giacenza', function (req, res) {
+    let vino = req.body.nomeVino, quantita = req.body.quantita;
+    if(quantita>=-1){ //-1 sta per prodotto non più rifornito
+        db.prepare("UPDATE Vini SET disponibilita = "+quantita+" WHERE nome='"+vino+"'").run();
+        res.send("vino specificato modificato")
+    }else{
+        res.status(400);
+        res.send("la quantità specificata non è valida");
+    }
+});
 
 app.listen(8080, function () {
     console.log('GoTodeVin listening on port 8080!');
