@@ -67,17 +67,15 @@ app.get('/:name', (req, res) => {
     res.render('wine', { data });
 });
 
-/* APIs*/
+/* APIs */
 
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
 //todo: codici di ritorno personalizzati
 
 function verificaDisponibilita(quantita, nome) {
-    db.prepare(`SELECT disponibilita FROM Vini WHERE nome='${nome}'`).all().forEach( (rows) => {
-        disponibilita = rows["disponibilita"];
-    });
-    return (disponibilita >= quantita);
-} //SE NON DISP PER ORA MANDO UNA STRINGA MEGLIO MANDARE ANCHE/SOLO UN CODICE DI ERRORE?
+    let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0].disponibilita;
+    return (disp >= quantita);
+}
 
 //CATALOGO
 
@@ -288,32 +286,35 @@ app.get('/api/assistenza', function (req, res) {
  *                     example: 2021-11-28T15:58:56.000
  */
 app.get('/api/ordini/:email', function (req, res) {
-    const sql = `SELECT id, tipo, stato, data_creazione, data_ritirabile FROM Ordini WHERE proprietario='${req.params.email}'`;
+    const sql = `SELECT id, tipo, stato, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${req.params.email}'`;
     const ordini = db.prepare(sql).all();
+    const dataPresente = new Date();
+    let dateParts, d;
 
     ordini.forEach((elem) => {
-        let dateParts = elem.data_creazione;
-        let jsDate = new Date(dataParts + "Z"); // NON SO SE FUNZIONA
-        let dataPresente = new Date();
-        if (elem.tipo == 'P' && dataPresente - jsDate > 21600000) {
-            db.prepare("DELETE FROM Ordini WHERE id=" + elem.id).run();
+        dateParts = elem.data_creazione.replace(' ','T')+'Z';
+        d = new Date(dateParts);
+        if (elem.tipo == 'P' && Math.abs(dataPresente-d) > 21600000) {
+            db.prepare("DELETE FROM Ordini WHERE id=?").run(elem.id);
 
-            let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=" + elem.id).all();
+            let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=?").all(elem.id);
             vini.forEach((elem) => {
-                db.prepare("UPDATE Vini SET disponibilita=disponibilita+" + elem.quantita + " WHERE nome='" + elem.vino + "'").run();
+                db.prepare("UPDATE Vini SET disponibilita=disponibilita+? WHERE nome=?").run(elem.quantita, elem.vino);
             });
 
-            db.prepare("DELETE FROM Ordini_Vini WHERE ordine=" + elem.id).run();
+            db.prepare("DELETE FROM Ordini_Vini WHERE ordine=?").run(elem.id);
         }
 
-        dateParts = elem.data_ritirabile;
-        jsDate = new Date(dataParts + "Z"); // NON SO SE FUNZIONA
-        if (elem.tipo == 'O' && dataPresente - jsDate > 300000 && elem.stato == "daRitirare") {
-            let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=" + elem.id).all();
-            vini.forEach((elem) => {
-                db.prepare("UPDATE Vini SET disponibilita=disponibilita+" + elem.quantita + " WHERE nome='" + elem.vino + "'").run();
-            });
-            db.prepare("UPDATE Ordini SET stato='scaduto' WHERE id=" + elem.id).run();
+        if(elem.data_ritirabile != null) {
+            dateParts = elem.data_ritirabile.split(/[- :]/);
+            d = new Date(dateParts[0], dateParts[1], dateParts[2], dateParts[3], dateParts[4], dateParts[5]);
+            if (elem.tipo == 'O' && dataPresente - d > 300000 && elem.stato == "daRitirare") {
+                let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=?").all(elem.id);
+                vini.forEach((elem) => {
+                    db.prepare("UPDATE Vini SET disponibilita=disponibilita+? WHERE nome=?").run(elem.quantita, elem.vino);
+                });
+                db.prepare("UPDATE Ordini SET stato='scaduto' WHERE id=?").run(elem.id);
+            }
         }
     });
 
@@ -390,8 +391,8 @@ app.get('/api/ordini/:email', function (req, res) {
  *                           example: 15
  */
 app.get('/api/ordini/dettaglio/:id', function (req, res) {
-    let sql = "SELECT vino,quantita FROM Ordini_Vini WHERE ordine=" + idOrdine;
     const idOrdine = req.params.id;
+    let sql = "SELECT vino,quantita FROM Ordini_Vini WHERE ordine=" + idOrdine;
     const vini = db.prepare(sql).all();
 
     sql = "SELECT * FROM Ordini WHERE id=" + idOrdine + " LIMIT 1";
@@ -591,7 +592,7 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  * /api/carrello/pre-ordina:
  *   post:
  *     summary: ordina o preordina.
- *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
+ *     description: ordina (tipo = O) o preordina (tipo = P) il contenuto del carrello, che viene svuotato.
  *     requestBody:
  *       required: true
  *       content:
@@ -616,34 +617,52 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *                type: string
  *                description: risultato operazione
  *                example: ordine creato
+ *       400:
+ *         description: input malformato.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: I seguenti vini non sono disponibili ...
  */
 app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
-    const { body: { utente, tipo } } = req;
-    const aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
+    const { body: { email, tipo } } = req;
+    let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
 
-    let prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${utente}'`).all();
+    let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
     prodotti.forEach((elem) => {
-        if (!verificaDisponibilita(elem['quantita'], elem['nome_vino'])) {
+        if (!verificaDisponibilita(elem.quantita, elem.vino)) {
             aggiungiPreordine = false;
-            viniMancanti += " " + elem['nome_vino'];
+            viniMancanti += " " + elem.vino;
         }
     });
 
+    if(prodotti.length == 0){
+        aggiungiPreordine = false;
+        viniMancanti = "carrello vuoto";
+    }
+
     if (aggiungiPreordine) {
-        db.prepare(`DELETE FROM Acquistabili WHERE cliente='${utente}'`).run();
         stato = (tipo == 'O') ? "inLavorazione" : "attesaPagamento";
 
-        let id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '" + stato + "', " + new Date().toISOString().replace('Z', '') + ", cliente='" + utente + "')").run();
+        data = new Date().toISOString().replace('Z', '').replace('T',' ');
+        id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES (?, ?, ?, ?)").run(tipo,
+                                                                                                          stato,
+                                                                                                          data,
+                                                                                                          email);
         id = id.lastInsertRowid;
         //NON SO SE FUNZIONA L'INSERIMENTO DELLA DATA
 
         prodotti.forEach((elem) => {
-            db.prepare(`INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES ('${elem.nome}',${id},${elem.quantita})`).run();
-            db.prepare(`UPDATE Vini SET disponibilita=disponibilita-${elem.quantita} WHERE nome='${elem.nome}'`).run();
+            db.prepare(`INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES (?,?,?)`).run(elem.vino, id, elem.quantita);
+            db.prepare(`UPDATE Vini SET disponibilita=disponibilita-? WHERE nome=?`).run(elem.quantita, elem.vino);
         });
-        res.send("ordine creato")
+        db.prepare(`DELETE FROM Acquistabili WHERE cliente='${email}'`).run();
+        res.send("ordine creato");
     } else {
-        res.send(viniMancanti)
+        res.status(400);
+        res.send(viniMancanti);
     }
 });
 
@@ -685,8 +704,8 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  * @swagger
  * /api/wallet/ricarica:
  *   post:
- *     summary: ordina o preordina.
- *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
+ *     summary: ricarica wallet.
+ *     description: ricarica wallet di un utente.
  *     requestBody:
  *       required: true
  *       content:
@@ -713,7 +732,7 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *                example: ricarica effettuata
  */
 app.post('/api/wallet/ricarica', function (req, res) {
-    db.prepare(`UPDATE Clienti SET saldo=saldo+${req.body.ricarica} WHERE cliente='${req.body.email}'`).run();
+    db.prepare(`UPDATE Clienti SET saldo=saldo+${req.body.ricarica} WHERE email='${req.body.email}'`).run();
     res.send("ricarica effettuata");
 });
 
@@ -724,8 +743,8 @@ app.post('/api/wallet/ricarica', function (req, res) {
  * @swagger
  * /api/preordine/converti:
  *   post:
- *     summary: ordina o preordina.
- *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
+ *     summary: converti un preordine.
+ *     description: il preordine è stato pagato e viene convertito.
  *     requestBody:
  *       required: true
  *       content:
@@ -757,7 +776,7 @@ app.post('/api/preordine/converti', function (req, res) {
 
 /**
  * @swagger
- * /api/ordini/dettaglio_tutti:
+ * /api/produttore/dettaglio_ordini:
  *   get:
  *     summary: report ordini.
  *     description: invia tutti i dettagli su tutti gli ordini avvenuti sul sito.
@@ -817,7 +836,7 @@ app.post('/api/preordine/converti', function (req, res) {
  *                           description: quantità in carrello.
  *                           example: 15
  */
-app.get('/api/ordini/dettaglio_tutti', function (req, res) {
+app.get('/api/produttore/dettaglio_ordini', function (req, res) {
     let sql = "SELECT * FROM Ordini";
     let ordine = db.prepare(sql).all();
     let vini = null;
