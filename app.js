@@ -622,8 +622,8 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
 
         if(tipo == 'O') stato="inLavorazione";
         else stato="attesaPagamento"
-        db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '"+stato+"', "+new Date().toISOString().replace('Z', '')+", cliente='"+utente+"')").run();
-        let id = db.prepare("SELECT id FROM Ordini WHERE cliente='"+utente+"' ORDER BY id DESC LIMIT 1").all()[0].id;
+        let id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES ('" + tipo + "', '"+stato+"', "+new Date().toISOString().replace('Z', '')+", cliente='"+utente+"')").run();
+        id = id.lastInsertRowid;
         //NON SO SE FUNZIONA L'INSERIMENTO DELLA DATA
 
         prodotti.forEach((elem) => {
@@ -867,6 +867,31 @@ app.post('/api/gestionale/giacenza', function (req, res) {
     }else{
         res.status(400);
         res.send("la quantità specificata non è valida");
+    }
+});
+
+app.post('/api/gestionale/creaVino', function (req, res) {
+    let vino = req.body.nomeVino, annata = req.body.annata, desc = req.body.descrizione, disp = req.body.disponibilita, prezzo = req.body.prezzo;
+    if(vino!=""){
+        if(desc != ""){
+            if(disp>0){
+                if(prezzo>0.0){
+                    db.prepare("INSERT")
+                }else{
+                    res.status(400);
+                    res.send("il prezzo non può essere negativo");
+                }
+            } else {
+                res.status(400);
+                res.send("la disponibilità deve essere un numero positivo");
+            }
+        } else {
+            res.status(400);
+            res.send("descrizione non specificata");
+        }
+    } else {
+        res.status(400);
+        res.send("nome vino non specificato");
     }
 });
 

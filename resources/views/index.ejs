@@ -27,7 +27,7 @@
 
     <script>
         async function initTable() {
-            const response = await fetch('http://localhost:8080/catalogo/vini')
+            const response = await fetch('http://localhost:8080/api/catalogo/vini')
 
             if (response.status === 200) {
                 let res = await response.json();
