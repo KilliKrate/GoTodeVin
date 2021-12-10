@@ -1,68 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <%- include('./partials/head.ejs') %>
 
     <title>Hello, world!</title>
-  </head>
+</head>
 
-  <body class="d-flex flex-row">
+<body class="d-flex flex-row">
     <%- include('./partials/sidenav.ejs') %>
 
     <div class="p-5 w-100">
-      <table id="catalogo" class="display w-100">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Annata</th>
-            <th>Prezzo</th>
-          </tr>
-        </thead>
-      </table>
+        <table id="catalogo" class="display w-100">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Annata</th>
+                    <th>Prezzo</th>
+                </tr>
+            </thead>
+        </table>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
     <script>
-      async function initTable() {
-        const response = await fetch("http://localhost:8080/api/catalogo/vini");
+        async function initTable() {
+            const response = await fetch("http://localhost:8080/api/catalogo/vini");
 
-        if (response.status === 200) {
-          let res = await response.json();
+            if (response.status === 200) {
+                let res = await response.json();
 
-          $("#catalogo").DataTable({
-            data: res,
-            columns: [
-              {
-                data: "nome",
-              },
-              {
-                data: "annata",
-              },
-              {
-                data: "prezzo",
-              },
-            ],
-          });
+                $("#catalogo").DataTable({
+                    data: res,
+                    columns: [{
+                            data: "nome",
+                        },
+                        {
+                            data: "annata",
+                        },
+                        {
+                            data: "prezzo",
+                        },
+                    ],
+                    "createdRow": function (row, data, dataIndex) {
+                        $(row).addClass("clickable");
+                    }
+                }, );
+            }
         }
-      }
 
-      $(document).ready(function () {
-        $("#catalogo").on("click", "tbody td", function () {
-          //get textContent of the TD
-          console.log("TD cell textContent : ", this.textContent);
+        $(document).ready(function () {
+            $("#catalogo").on("click", "tbody tr", function () {
+                window.location.href = encodeURIComponent(this.firstElementChild.textContent.trim());
+            });
 
-          //get the value of the TD using the API
-          console.log(
-            "value by API : ",
-            table
-              .cell({ row: this.parentNode.rowIndex, column: this.cellIndex })
-              .data()
-          );
+            initTable();
         });
-
-        initTable();
-      });
     </script>
-  </body>
+</body>
+
 </html>
