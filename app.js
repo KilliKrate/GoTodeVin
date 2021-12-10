@@ -71,6 +71,7 @@ app.get('/:name', (req, res) => {
 
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
 //todo: codici di ritorno personalizzati
+//todo: controlla che inserimento ordini e conversione preordini funzioni ancora
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0].disponibilita;
@@ -597,7 +598,7 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *     summary: ordina o preordina.
  *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
  *     requestBody:
- *       descrizione: dati inserimento se ordina (tipo = O), preordina (tipo = P)
+ *       descrizione: dati inserimento se ordina (tipo = O), preordina (tipo = P) se preordina non va specificato il metodo di pagamento
  *       required: true
  *       content:
  *         application/json:
@@ -612,6 +613,10 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *                  type: string
  *                  description: il cliente che ha richiesto l'ordinazione
  *                  example: RobbieJLavender@dayrep.com
+ *               metodoPagamento:
+ *                  type: string
+ *                  description: id del preordine da modificare
+ *                  example: wallet
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -629,16 +634,26 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *                type: string
  *                description: risultato operazione
  *                example: I seguenti vini non sono disponibili ...
+ *       402:
+ *         description: saldo insufficiente.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: saldo insufficente
  */
 app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
-    const { body: { email, tipo } } = req;
-    let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:";
+    const { body: { email, tipo} } = req;
+    let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:", totale = 0, saldoSuff=true;
 
     let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
     prodotti.forEach((elem) => {
-        if (!verificaDisponibilita(elem.quantita, elem.vino)) {
+        let vino = db.prepare(`SELECT disponibilita, prezzo FROM Vini WHERE nome=?`).all(nome)[0]
+        if (vino.disponibilita>=elem.quantita) {
             aggiungiPreordine = false;
             viniMancanti += " " + elem.vino;
+            totale += elem.quantita * vino.prezzo;
         }
     });
 
@@ -648,22 +663,32 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
     }
 
     if (aggiungiPreordine) {
-        stato = (tipo == 'O') ? "inLavorazione" : "attesaPagamento";
+        if(req.body.metodoPagamento == 'wallet' && tipo == 'O'){
+            saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(email)[0].saldo;
+            if(saldo>=preordine.totale){
+                db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(totale, email);
+            }else{
+                saldoSuff = false;
+            }
+        }
 
-        data = new Date().toISOString().replace('Z', '').replace('T',' ');
-        id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente) VALUES (?, ?, ?, ?)").run(tipo,
-                                                                                                          stato,
-                                                                                                          data,
-                                                                                                          email);
-        id = id.lastInsertRowid;
-        //NON SO SE FUNZIONA L'INSERIMENTO DELLA DATA
+        if(saldoSuff){
+            stato = (tipo == 'O') ? "inLavorazione" : "attesaPagamento";
 
-        prodotti.forEach((elem) => {
-            db.prepare(`INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES (?,?,?)`).run(elem.vino, id, elem.quantita);
-            db.prepare(`UPDATE Vini SET disponibilita=disponibilita-? WHERE nome=?`).run(elem.quantita, elem.vino);
-        });
-        db.prepare(`DELETE FROM Acquistabili WHERE cliente='${email}'`).run();
-        res.send("ordine creato");
+            data = new Date().toISOString().replace('Z', '').replace('T',' ');
+            id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente, totale) VALUES (?, ?, ?, ?)").run(tipo, stato, data, email, totale);
+            id = id.lastInsertRowid;
+
+            prodotti.forEach((elem) => {
+                db.prepare(`INSERT INTO Ordini_Vini (vino, ordine, quantita) VALUES (?,?,?)`).run(elem.vino, id, elem.quantita);
+                db.prepare(`UPDATE Vini SET disponibilita=disponibilita-? WHERE nome=?`).run(elem.quantita, elem.vino);
+            });
+            db.prepare(`DELETE FROM Acquistabili WHERE cliente='${email}'`).run();
+            res.send("ordine creato");
+        }else{
+            res.status(402);
+            res.send("saldo insufficiente");
+        }
     } else {
         res.status(400);
         res.send(viniMancanti);
@@ -762,6 +787,10 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *                  type: integer
  *                  description: id del preordine da modificare
  *                  example: 156
+ *               metodoPagamento:
+ *                  type: string
+ *                  description: id del preordine da modificare
+ *                  example: wallet
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -771,11 +800,36 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *                type: string
  *                description: risultato operazione
  *                example: ordine creato
+ *       402:
+ *         description: saldo insufficiente.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: saldo insufficente
  */
 app.post('/api/preordine/converti', function (req, res) {
-    //todo: VERIFICA CHE NON SIA SCADUTO
-    db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
-    res.send("ordine creato")
+    const preordine = db.prepare("SELECT cliente, totale FROM Ordini WHERE id=?").all(req.body.id)[0].cliente;
+    let saldoSuff = true, saldo;
+    
+
+    if(req.body.metodoPagamento == 'wallet'){
+        saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(preordine.cliente)[0].saldo;
+        if(saldo>=preordine.totale){
+            db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(preordine.totale, preordine.cliente);
+        }else{
+            saldoSuff = false;
+        }
+    }
+
+    if(saldoSuff){
+        db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
+        res.send("ordine creato");
+    }else{
+        res.status(402)
+        res.send("saldo insufficiente");
+    }
 });
 
 //PRODUTTORE
