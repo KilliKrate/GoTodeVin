@@ -293,9 +293,9 @@ app.get('/api/ordini/:email', function (req, res) {
     let dateParts, d;
 
     ordini.forEach((elem) => {
-        dateParts = elem.data_creazione.replace(' ','T')+'Z';
+        dateParts = elem.data_creazione.replace(' ', 'T') + 'Z';
         d = new Date(dateParts);
-        if (elem.tipo == 'P' && Math.abs(dataPresente-d) > 21600000) {
+        if (elem.tipo == 'P' && Math.abs(dataPresente - d) > 21600000) {
             db.prepare("DELETE FROM Ordini WHERE id=?").run(elem.id);
 
             let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=?").all(elem.id);
@@ -306,7 +306,7 @@ app.get('/api/ordini/:email', function (req, res) {
             db.prepare("DELETE FROM Ordini_Vini WHERE ordine=?").run(elem.id);
         }
 
-        if(elem.data_ritirabile != null) {
+        if (elem.data_ritirabile != null) {
             dateParts = elem.data_ritirabile.split(/[- :]/);
             d = new Date(dateParts[0], dateParts[1], dateParts[2], dateParts[3], dateParts[4], dateParts[5]);
             if (elem.tipo == 'O' && dataPresente - d > 300000 && elem.stato == "daRitirare") {
@@ -644,38 +644,38 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *                example: saldo insufficente
  */
 app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
-    const { body: { email, tipo} } = req;
-    let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:", totale = 0, saldoSuff=true;
+    const { body: { email, tipo } } = req;
+    let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:", totale = 0, saldoSuff = true;
 
     let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
     prodotti.forEach((elem) => {
         let vino = db.prepare(`SELECT disponibilita, prezzo FROM Vini WHERE nome=?`).all(nome)[0]
-        if (vino.disponibilita>=elem.quantita) {
+        if (vino.disponibilita >= elem.quantita) {
             aggiungiPreordine = false;
             viniMancanti += " " + elem.vino;
             totale += elem.quantita * vino.prezzo;
         }
     });
 
-    if(prodotti.length == 0){
+    if (prodotti.length == 0) {
         aggiungiPreordine = false;
         viniMancanti = "carrello vuoto";
     }
 
     if (aggiungiPreordine) {
-        if(req.body.metodoPagamento == 'wallet' && tipo == 'O'){
+        if (req.body.metodoPagamento == 'wallet' && tipo == 'O') {
             saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(email)[0].saldo;
-            if(saldo>=preordine.totale){
+            if (saldo >= preordine.totale) {
                 db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(totale, email);
-            }else{
+            } else {
                 saldoSuff = false;
             }
         }
 
-        if(saldoSuff){
+        if (saldoSuff) {
             stato = (tipo == 'O') ? "inLavorazione" : "attesaPagamento";
 
-            data = new Date().toISOString().replace('Z', '').replace('T',' ');
+            data = new Date().toISOString().replace('Z', '').replace('T', ' ');
             id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente, totale) VALUES (?, ?, ?, ?)").run(tipo, stato, data, email, totale);
             id = id.lastInsertRowid;
 
@@ -685,7 +685,7 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
             });
             db.prepare(`DELETE FROM Acquistabili WHERE cliente='${email}'`).run();
             res.send("ordine creato");
-        }else{
+        } else {
             res.status(402);
             res.send("saldo insufficiente");
         }
@@ -728,6 +728,16 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
 app.get('/api/wallet/saldo/:email', function (req, res) {
     res.send(db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all());
 });
+
+// TODO: documentare con swagger
+
+app.get('/api/utenti/', function (req, res) {
+    res.send(db.prepare(`SELECT email, name FROM Clienti`).all());
+})
+
+app.get('/api/utenti/:email', function (req, res) {
+    res.send(db.prepare(`SELECT email, name FROM Clienti WHERE email='${req.params.email}'`).all()[0]);
+})
 
 /**
  * @swagger
@@ -812,21 +822,21 @@ app.post('/api/wallet/ricarica', function (req, res) {
 app.post('/api/preordine/converti', function (req, res) {
     const preordine = db.prepare("SELECT cliente, totale FROM Ordini WHERE id=?").all(req.body.id)[0].cliente;
     let saldoSuff = true, saldo;
-    
 
-    if(req.body.metodoPagamento == 'wallet'){
+
+    if (req.body.metodoPagamento == 'wallet') {
         saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(preordine.cliente)[0].saldo;
-        if(saldo>=preordine.totale){
+        if (saldo >= preordine.totale) {
             db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(preordine.totale, preordine.cliente);
-        }else{
+        } else {
             saldoSuff = false;
         }
     }
 
-    if(saldoSuff){
+    if (saldoSuff) {
         db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
         res.send("ordine creato");
-    }else{
+    } else {
         res.status(402)
         res.send("saldo insufficiente");
     }
@@ -1019,7 +1029,7 @@ app.post('/api/gestionale/creaVino', function (req, res) {
     const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req;
 
     if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0) {
-        db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino,annata,descrizione, disponibilita, prezzo);
+        db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino, annata, descrizione, disponibilita, prezzo);
         res.send("vino inserito");
     } else {
         res.status(400);
@@ -1075,15 +1085,15 @@ app.post('/api/gestionale/creaVino', function (req, res) {
  *                description: risultato operazione
  *                example: richiesta malformata
  */
-app.post('/api/gestionale/modifica_stato_ordine', function (req,res) {
-    const { body: { idOrdine, stato} } = req;
-    const data = new Date().toISOString().replace('Z', '').replace('T',' ');
+app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
+    const { body: { idOrdine, stato } } = req;
+    const data = new Date().toISOString().replace('Z', '').replace('T', ' ');
 
-    switch(stato) {
+    switch (stato) {
         case "daRitirare":
             db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
             res.send("ordine modificato");
-        break;
+            break;
 
         case "evaso":
             db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);

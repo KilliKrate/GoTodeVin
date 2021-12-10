@@ -24,39 +24,36 @@
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
-    <script>
+    <script type="module">
+        import {initUsers} from '/resources/scripts/sidenav.mjs';
+        import {getCookie} from '/resources/scripts/cookie.mjs';
+
         async function initTable() {
             const response = await fetch("http://localhost:8080/api/catalogo/vini");
 
-            if (response.status === 200) {
-                let res = await response.json();
+            let res = await response.json();
 
-                $("#catalogo").DataTable({
-                    data: res,
-                    columns: [{
-                            data: "nome",
-                        },
-                        {
-                            data: "annata",
-                        },
-                        {
-                            data: "prezzo",
-                        },
-                    ],
-                    "createdRow": function (row, data, dataIndex) {
-                        $(row).addClass("clickable");
-                    }
-                }, );
-            }
-        }
-
-        $(document).ready(function () {
+            $("#catalogo").DataTable({
+                data: res,
+                columns: [{
+                    data: "nome",
+                }, {
+                    data: "annata",
+                }, {
+                    data: "prezzo",
+                }, ],
+                "createdRow": function (row, data, dataIndex) {
+                    $(row).addClass("clickable");
+                }
+            });
+            
             $("#catalogo").on("click", "tbody tr", function () {
                 window.location.href = encodeURIComponent(this.firstElementChild.textContent.trim());
             });
+        }
 
-            initTable();
-        });
+        initUsers();
+        initTable();
     </script>
 </body>
 
