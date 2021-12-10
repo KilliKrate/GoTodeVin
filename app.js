@@ -51,7 +51,7 @@ const swaggerOptions = {
 };
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use('/api/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 
@@ -73,7 +73,7 @@ app.get('/:name', (req, res) => {
 //todo: codici di ritorno personalizzati
 
 function verificaDisponibilita(quantita, nome) {
-    db.all(`SELECT disponibilita FROM Vini WHERE nome='${nome}'`, (err, rows) => {
+    db.prepare(`SELECT disponibilita FROM Vini WHERE nome='${nome}'`).all().forEach( (rows) => {
         disponibilita = rows["disponibilita"];
     });
     return (disponibilita >= quantita);
@@ -540,7 +540,7 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  * /api/carrello/aggiungi:
  *   post:
  *     summary: modifica carrello.
- *     description: modifica la quantità per un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con l'aggiunta idem se l'elemento è già in carrello
+ *     description: aggiunge un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con l'aggiunta idem se l'elemento è già in carrello
  *     requestBody:
  *       required: true
  *       content:
@@ -548,6 +548,10 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *           schema:
  *             type: object
  *             properties:
+ *               quantita:
+ *                  type: integer
+ *                  description: quanti vini voglio aggiungere al carrello
+ *                  example: 8
  *               nomeVino:
  *                  type: string
  *                  description: il nome del vino da aggiungere.
@@ -567,16 +571,16 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *                example: aggiunto
  */
 app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E' GIA' IN CARRRELLO DOVREI AGGIUNGERE LA QUANTITA' RICEVUTA O SCARTARE LA MODIFICA?
-    const { body: { quantita, nomeVino, email } } = res;
+    const { body: { quantita, nomeVino, email } } = req;
     if (quantita == 0 || !verificaDisponibilita(quantita, nomeVino)) {
-        req.send("aggiunti 0 vini al carrello");
+        res.send("aggiunti 0 vini al carrello");
     }
     else {
         let esiste = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nomeVino}' AND cliente='${email}'`).all();
         if (esiste.length != 0) res.send("vino già presente");
         else {
-            sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES ('" + nomeVino + "', '" + email + "', " + quantita + ")";
-            db.prepare(sql).run();
+            sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
+            db.prepare(sql).run(nomeVino, email, quantita);
             res.send("aggiunto");
         }
     }
@@ -879,11 +883,63 @@ app.post('/api/gestionale/giacenza', function (req, res) {
     }
 });
 
+/**
+ * @swagger
+ * /api/gestionale/creaVino:
+ *   post:
+ *     summary: aggiungi vino.
+ *     description: aggiungi un vino.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nomeVino:
+ *                  type: string
+ *                  description: nome del vino da aggiungere
+ *                  example: Sauvignon
+ *               annata:
+ *                  type: integer
+ *                  description: annata del vino
+ *                  example: 2015
+ *               descrizione:
+ *                  type: string
+ *                  description: descrizione del vino
+ *                  example: vino eccelso da note amare che non dispiacciono
+ *               disponibilita:
+ *                  type: integer
+ *                  description: disponibilità del vino
+ *                  example: 56
+ *               prezzo:
+ *                  type: float
+ *                  description: prezzo del vino
+ *                  example: 15.3
+ *     responses:
+ *       200:
+ *         description: operazione avvenuta.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: vino inserito
+ *       400:
+ *         description: dati errati.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: richiesta malformata
+ */
 app.post('/api/gestionale/creaVino', function (req, res) {
-    const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req
+    const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req;
 
     if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0) {
-        db.prepare("INSERT")
+        db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino,annata,descrizione, disponibilita, prezzo);
+        res.send("vino inserito");
     } else {
         res.status(400);
         res.send("richiesta malformata");
