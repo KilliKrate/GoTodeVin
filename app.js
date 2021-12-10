@@ -448,6 +448,7 @@ app.get('/api/carrello/:email', function (req, res) {
  *     summary: modifica carrello.
  *     description: modifica la quantità per un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con la modifica
  *     requestBody:
+ *       description: nuova quantità del vino, nome del vino da modificare e a chi fare la modifica
  *       required: true
  *       content:
  *         application/json:
@@ -503,6 +504,7 @@ app.post('/api/carrello/modifica', function (req, res) {
  *     summary: rimuovi da carrello.
  *     description: rimuove un elemento nel carrello
  *     requestBody:
+ *       description: vino da rimuovere e cliente a cui rimuoverlo
  *       required: true
  *       content:
  *         application/json:
@@ -543,6 +545,7 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *     summary: modifica carrello.
  *     description: aggiunge un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con l'aggiunta idem se l'elemento è già in carrello
  *     requestBody:
+ *       description: numero vini da aggiungere, nome del vino da aggiungere e cliente a cui aggiungere il vino al carrello
  *       required: true
  *       content:
  *         application/json:
@@ -592,8 +595,9 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  * /api/carrello/pre-ordina:
  *   post:
  *     summary: ordina o preordina.
- *     description: ordina (tipo = O) o preordina (tipo = P) il contenuto del carrello, che viene svuotato.
+ *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
  *     requestBody:
+ *       descrizione: dati inserimento se ordina (tipo = O), preordina (tipo = P)
  *       required: true
  *       content:
  *         application/json:
@@ -707,6 +711,7 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *     summary: ricarica wallet.
  *     description: ricarica wallet di un utente.
  *     requestBody:
+ *       descrizione: quantità ricarica con l'utente a cui ricaricare il wallet
  *       required: true
  *       content:
  *         application/json:
@@ -746,6 +751,7 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *     summary: converti un preordine.
  *     description: il preordine è stato pagato e viene convertito.
  *     requestBody:
+ *       descrizione: id del preordine da modificare
  *       required: true
  *       content:
  *         application/json:
@@ -859,6 +865,7 @@ app.get('/api/produttore/dettaglio_ordini', function (req, res) {
  *     summary: giacenza.
  *     description: modifica la disponibilità di un vino.
  *     requestBody:
+ *       description: vino da modificare con relavita nuova disponibilità
  *       required: true
  *       content:
  *         application/json:
@@ -909,6 +916,7 @@ app.post('/api/gestionale/giacenza', function (req, res) {
  *     summary: aggiungi vino.
  *     description: aggiungi un vino.
  *     requestBody:
+ *       description: dati di inserimento del nuovo vino
  *       required: true
  *       content:
  *         application/json:
@@ -962,6 +970,75 @@ app.post('/api/gestionale/creaVino', function (req, res) {
     } else {
         res.status(400);
         res.send("richiesta malformata");
+    }
+});
+
+/**
+ * @swagger
+ * /api/gestionale/modifica_stato_ordine:
+ *   post:
+ *     summary: stato ordine.
+ *     description: modifica lo stato di un ordine.
+ *     requestBody:
+ *       description: nuovi dati di ordine. qr (non implementato poi nel fron-end) e locker possono essere vuoti nel caso in cui si stia evadendo l'ordine
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idOrdine:
+ *                  type: integer
+ *                  description: id dell'ordine
+ *                  example: 5
+ *               stato:
+ *                  type: string
+ *                  description: nuovo stato dell'ordine
+ *                  example: daRitirare
+ *               qr:
+ *                  type: string
+ *                  description: qr dell'ordine
+ *                  example: string
+ *               locker:
+ *                  type: integer
+ *                  description: numero del locker in cui l'ordine si trova
+ *                  example: 5
+ *     responses:
+ *       200:
+ *         description: operazione avvenuta.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: ordine modificato
+ *       400:
+ *         description: dati errati.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: richiesta malformata
+ */
+app.post('/api/gestionale/modifica_stato_ordine', function (req,res) {
+    const { body: { idOrdine, stato} } = req;
+    const data = new Date().toISOString().replace('Z', '').replace('T',' ');
+
+    switch(stato) {
+        case "daRitirare":
+            db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
+            res.send("ordine modificato");
+        break;
+
+        case "evaso":
+            db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
+            res.send("ordine modificato");
+            break;
+
+        default:
+            res.status(400);
+            res.send("richiesta malformata")
     }
 });
 
