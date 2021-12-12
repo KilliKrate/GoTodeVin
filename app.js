@@ -71,7 +71,8 @@ app.get('/:name', (req, res) => {
 
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
 //todo: codici di ritorno personalizzati
-//todo: controlla che inserimento ordini e conversione preordini funzioni ancora
+//todo: controlla che inserimento ordini e conversione preordini funzioni ancora dopo aggiunta TOTALE
+//todo: il converti perordina dovrebbe controllare che quello che si sta modificando è effettivamente un preordine
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0].disponibilita;
@@ -155,8 +156,14 @@ app.get('/api/catalogo/vini', function (req, res) {
  *                     description: annata del vino.
  *                     example: 2015
  */
-app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VINI???
-    const sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0"; //assumo che questa funzione non possa essere chiamata senza almeno un criterio di ricerca
+app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
+    const sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0"; 
+    let nome =req.params.nome, annata = req.params.annata;
+    if(nome!="NONE") {
+        sql += " AND nome LIKE '%"+nome+"%'"; //NON DEVE ESSERE ESATTAMENTE QUELLO
+    }
+    if(annata!=0) sql += " AND annata = "+annata;
+    res.send(db.prepare(sql).all());
 });
 
 /**
@@ -171,6 +178,7 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VI
  *         schema:
  *           type: string
  *         required: true
+ *         example: Sauvignon
  *         description: il nome del vino di cui voglio ottenere informazioni più dettagliate
  *     responses:
  *       200:
@@ -178,8 +186,6 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VI
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
  *                 type: object
  *                 properties:
  *                   nome:
@@ -205,7 +211,7 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) { //VINO o VI
  */
 app.get('/api/catalogo/dettaglio/:name', function (req, res) {
     const sql = `SELECT * FROM Vini WHERE nome = '${req.params.name}'`;
-    res.send(db.prepare(sql).all());
+    res.send(db.prepare(sql).all()[0]);
 });
 
 //ASSISTENZA
@@ -254,6 +260,7 @@ app.get('/api/assistenza', function (req, res) {
  *         schema:
  *           type: string
  *         required: true
+ *         example: Pluto@GoToDeMail.com
  *         description: la mail dell'utente che sta richiedendo i propri ordini
  *     responses:
  *       200:
@@ -334,6 +341,7 @@ app.get('/api/ordini/:email', function (req, res) {
  *         schema:
  *           type: string
  *         required: true
+ *         example: 1
  *         description: l'id dell'ordine di cui voglio ottenere più informazioni
  *     responses:
  *       200:
@@ -341,14 +349,12 @@ app.get('/api/ordini/:email', function (req, res) {
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
  *                 type: object
  *                 properties:
  *                   id:
  *                     type: integer
  *                     description: L'id dell'ordine o preordine.
- *                     example: 5
+ *                     example: 1
  *                   tipo:
  *                     type: string
  *                     description: O per gli ordini P per i preordini.
@@ -397,9 +403,9 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
     const vini = db.prepare(sql).all();
 
     sql = "SELECT * FROM Ordini WHERE id=" + idOrdine + " LIMIT 1";
-    let ordine = db.prepare(sql).all();
+    let ordine = db.prepare(sql).all()[0];
 
-    ordine[0].vini = vini;
+    ordine.vini = vini;
     res.send(ordine);
 });
 
@@ -417,6 +423,7 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  *         schema:
  *           type: string
  *         required: true
+ *         example: Pluto@GoToDeMail.com
  *         description: la mail dell'utente che sta richiedendo il proprio carrello
  *     responses:
  *       200:
@@ -695,6 +702,73 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
     }
 });
 
+//UTENTI
+
+/**
+ * @swagger
+ * /api/utenti:
+ *   get:
+ *     summary: utenti.
+ *     description: recupera dal database tutti gli utenti esistenti.
+ *     responses:
+ *       200:
+ *         description: Lista dei nomi e email degli utenti.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                     description: Il nome dell'utente.
+ *                     example: Pluto
+ *                   email:
+ *                     type: string
+ *                     description: email dell'utente.
+ *                     example: Pluto@GoToDeMail.com
+ */
+app.get('/api/utenti/', function (req, res) {
+    res.send(db.prepare(`SELECT email, name FROM Clienti`).all());
+})
+
+//NON BASTEREBBE INVIARE IL NOME?
+/**
+ * @swagger
+ * /api/utenti/{email}:
+ *   get:
+ *     summary: recupera utente.
+ *     description: recupera dal database il nome e email di un utente specificato.
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         schema:
+ *           type: string
+ *         required: true
+ *         example: Pluto@GoToDeMail.com
+ *         description: la mail dell'utente che sta richiedendo il proprio saldo
+ *     responses:
+ *       200:
+ *         description: Nome e email dell'utente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 name:
+ *                   type: string
+ *                   description: Il nome dell'utente.
+ *                   example: Pluto
+ *                 email:
+ *                   type: string
+ *                   description: email dell'utente.
+ *                   example: Pluto@GoToDeMail.com
+ */
+app.get('/api/utenti/:email', function (req, res) {
+    res.send(db.prepare(`SELECT email, name FROM Clienti WHERE email='${req.params.email}'`).all()[0]);
+})
+
 //WALLET
 
 /**
@@ -709,6 +783,7 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
  *         schema:
  *           type: string
  *         required: true
+ *         example: Pluto@GoToDeMail.com
  *         description: la mail dell'utente che sta richiedendo il proprio saldo
  *     responses:
  *       200:
@@ -716,8 +791,6 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
  *                 type: object
  *                 properties:
  *                   saldo:
@@ -726,18 +799,8 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
  *                     example: 15.8
  */
 app.get('/api/wallet/saldo/:email', function (req, res) {
-    res.send(db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all());
+    res.send(db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all()[0]);
 });
-
-// TODO: documentare con swagger
-
-app.get('/api/utenti/', function (req, res) {
-    res.send(db.prepare(`SELECT email, name FROM Clienti`).all());
-})
-
-app.get('/api/utenti/:email', function (req, res) {
-    res.send(db.prepare(`SELECT email, name FROM Clienti WHERE email='${req.params.email}'`).all()[0]);
-})
 
 /**
  * @swagger
@@ -777,7 +840,6 @@ app.post('/api/wallet/ricarica', function (req, res) {
 });
 
 //PREORDINE
-// TODO: prendi in input il metodo di pagamento e se wallet, scala saldo
 
 /**
  * @swagger
@@ -796,7 +858,7 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *               id:
  *                  type: integer
  *                  description: id del preordine da modificare
- *                  example: 156
+ *                  example: 1
  *               metodoPagamento:
  *                  type: string
  *                  description: id del preordine da modificare
@@ -863,7 +925,7 @@ app.post('/api/preordine/converti', function (req, res) {
  *                   id:
  *                     type: integer
  *                     description: L'id dell'ordine o preordine.
- *                     example: 5
+ *                     example: 1
  *                   tipo:
  *                     type: string
  *                     description: O per gli ordini P per i preordini.
@@ -990,7 +1052,7 @@ app.post('/api/gestionale/giacenza', function (req, res) {
  *               nomeVino:
  *                  type: string
  *                  description: nome del vino da aggiungere
- *                  example: Sauvignon
+ *                  example: Sauvignon riserva
  *               annata:
  *                  type: integer
  *                  description: annata del vino
@@ -1054,7 +1116,7 @@ app.post('/api/gestionale/creaVino', function (req, res) {
  *               idOrdine:
  *                  type: integer
  *                  description: id dell'ordine
- *                  example: 5
+ *                  example: 1
  *               stato:
  *                  type: string
  *                  description: nuovo stato dell'ordine
