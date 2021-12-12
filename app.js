@@ -85,6 +85,8 @@ function verificaDisponibilita(quantita, nome) {
  * @swagger
  * /api/catalogo/vini:
  *   get:
+ *     tags:
+ *       - catalogo
  *     summary: lista dei vini disponibili.
  *     description: recupera dal database i vini che sono disponibili nel magazzino.
  *     responses:
@@ -119,6 +121,8 @@ app.get('/api/catalogo/vini', function (req, res) {
  * @swagger
  * /api/catalogo/ricerca/{nome vino}&{annata}:
  *   get:
+ *     tags:
+ *       - catalogo
  *     summary: lista dei vini disponibili ricercati.
  *     description: recupera dal database i vini che sono disponibili nel magazzino e che rispettano i criteri di ricerca, 
  *                  posso avere uno dei due criteri non specificati mettendo in nome la stringa NONE o 0 in annata.
@@ -170,6 +174,8 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
  * @swagger
  * /api/catalogo/dettaglio/{nome}:
  *   get:
+ *     tags:
+ *       - catalogo
  *     summary: dettaglio vino.
  *     description: recupera dal database i dettagli di un vino.
  *     parameters:
@@ -220,6 +226,8 @@ app.get('/api/catalogo/dettaglio/:name', function (req, res) {
  * @swagger
  * /api/assistenza:
  *   get:
+ *     tags:
+ *       - assistenza
  *     summary: dettagli assistenza.
  *     description: recupera le informazioni necessarie a mostrare i numeri di assistenza.
  *     responses:
@@ -252,6 +260,8 @@ app.get('/api/assistenza', function (req, res) {
  * @swagger
  * /api/ordini/{email}:
  *   get:
+ *     tags:
+ *       - ordini
  *     summary: ordini.
  *     description: recupera dal database gli ordini di un cliente. Fa inoltre il controllo della scadenza degli ordini e dei preordini
  *     parameters:
@@ -333,6 +343,8 @@ app.get('/api/ordini/:email', function (req, res) {
  * @swagger
  * /api/ordini/dettaglio/{idOrdine}:
  *   get:
+ *     tags:
+ *       - ordini
  *     summary: dettaglio ordini.
  *     description: recupera dal database i dettagli di un ordine.
  *     parameters:
@@ -415,6 +427,8 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  * @swagger
  * /api/carrello/{email}:
  *   get:
+ *     tags:
+ *       - carrello
  *     summary: carrello.
  *     description: recupera dal database i vini presenti nel carrello di un cliente
  *     parameters:
@@ -453,6 +467,8 @@ app.get('/api/carrello/:email', function (req, res) {
  * @swagger
  * /api/carrello/modifica:
  *   post:
+ *     tags:
+ *       - carrello
  *     summary: modifica carrello.
  *     description: modifica la quantità per un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con la modifica
  *     requestBody:
@@ -509,6 +525,8 @@ app.post('/api/carrello/modifica', function (req, res) {
  * @swagger
  * /api/carrello/modifica:
  *   delete:
+ *     tags:
+ *       - carrello
  *     summary: rimuovi da carrello.
  *     description: rimuove un elemento nel carrello
  *     requestBody:
@@ -550,6 +568,8 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  * @swagger
  * /api/carrello/aggiungi:
  *   post:
+ *     tags:
+ *       - carrello
  *     summary: modifica carrello.
  *     description: aggiunge un elemento nel carrello, se non vi sono abbastanza vini disponibili allora non andrà avanti con l'aggiunta idem se l'elemento è già in carrello
  *     requestBody:
@@ -602,6 +622,8 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  * @swagger
  * /api/carrello/pre-ordina:
  *   post:
+ *     tags:
+ *       - carrello
  *     summary: ordina o preordina.
  *     description: ordina o preordina il contenuto del carrello, che viene svuotato.
  *     requestBody:
@@ -708,6 +730,8 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
  * @swagger
  * /api/utenti:
  *   get:
+ *     tags:
+ *       - utenti
  *     summary: utenti.
  *     description: recupera dal database tutti gli utenti esistenti.
  *     responses:
@@ -738,6 +762,8 @@ app.get('/api/utenti/', function (req, res) {
  * @swagger
  * /api/utenti/{email}:
  *   get:
+ *     tags:
+ *       - utenti
  *     summary: recupera utente.
  *     description: recupera dal database il nome e email di un utente specificato.
  *     parameters:
@@ -775,6 +801,8 @@ app.get('/api/utenti/:email', function (req, res) {
  * @swagger
  * /api/wallet/saldo/{email}:
  *   get:
+ *     tags:
+ *       - utenti
  *     summary: saldo.
  *     description: recupera dal database il saldo contenuto nel wallet di un cliente
  *     parameters:
@@ -806,6 +834,8 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  * @swagger
  * /api/wallet/ricarica:
  *   post:
+ *     tags:
+ *       - utenti
  *     summary: ricarica wallet.
  *     description: ricarica wallet di un utente.
  *     requestBody:
@@ -845,6 +875,8 @@ app.post('/api/wallet/ricarica', function (req, res) {
  * @swagger
  * /api/preordine/converti:
  *   post:
+ *     tags:
+ *       - preordini
  *     summary: converti un preordine.
  *     description: il preordine è stato pagato e viene convertito.
  *     requestBody:
@@ -910,6 +942,8 @@ app.post('/api/preordine/converti', function (req, res) {
  * @swagger
  * /api/produttore/dettaglio_ordini:
  *   get:
+ *     tags:
+ *       - produttore
  *     summary: report ordini.
  *     description: invia tutti i dettagli su tutti gli ordini avvenuti sul sito.
  *     responses:
@@ -988,6 +1022,8 @@ app.get('/api/produttore/dettaglio_ordini', function (req, res) {
  * @swagger
  * /api/gestionale/giacenza:
  *   post:
+ *     tags:
+ *       - gestionale
  *     summary: giacenza.
  *     description: modifica la disponibilità di un vino.
  *     requestBody:
@@ -1039,6 +1075,8 @@ app.post('/api/gestionale/giacenza', function (req, res) {
  * @swagger
  * /api/gestionale/creaVino:
  *   post:
+ *     tags:
+ *       - gestionale
  *     summary: aggiungi vino.
  *     description: aggiungi un vino.
  *     requestBody:
@@ -1103,6 +1141,8 @@ app.post('/api/gestionale/creaVino', function (req, res) {
  * @swagger
  * /api/gestionale/modifica_stato_ordine:
  *   post:
+ *     tags:
+ *       - gestionale
  *     summary: stato ordine.
  *     description: modifica lo stato di un ordine.
  *     requestBody:
