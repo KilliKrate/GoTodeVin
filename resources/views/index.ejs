@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 
 <head>
     <%- include('./partials/head.ejs') %>
@@ -29,26 +29,26 @@
         import {getCookie} from '/resources/scripts/cookie.mjs';
 
         async function initTable() {
-            const response = await fetch("http://localhost:8080/api/catalogo/vini");
-
-            let res = await response.json();
-
-            $("#catalogo").DataTable({
-                data: res,
-                columns: [{
-                    data: "nome",
-                }, {
-                    data: "annata",
-                }, {
-                    data: "prezzo",
-                }, ],
-                "createdRow": function (row, data, dataIndex) {
-                    $(row).addClass("clickable");
-                }
-            });
-            
-            $("#catalogo").on("click", "tbody tr", function () {
-                window.location.href = encodeURIComponent(this.firstElementChild.textContent.trim());
+            const response = await fetch("http://localhost:8080/api/catalogo/vini")
+            .then(response => response.json())
+            .then(data => {
+                $("#catalogo").DataTable({
+                    data,
+                    columns: [{
+                        data: "nome",
+                    }, {
+                        data: "annata",
+                    }, {
+                        data: "prezzo",
+                    }, ],
+                    "createdRow": function (row, data, dataIndex) {
+                        $(row).addClass("clickable");
+                    }
+                });
+                
+                $("#catalogo").on("click", "tbody tr", function () {
+                    window.location.href = encodeURIComponent(this.firstElementChild.textContent.trim());
+                });
             });
         }
 

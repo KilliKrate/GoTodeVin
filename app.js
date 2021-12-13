@@ -61,10 +61,12 @@ app.get('/', (req, res) => {
     res.render('index')
 });
 
+app.get('/carrello', (req, res) => {
+    res.render('carrello')
+});
+
 app.get('/:name', (req, res) => {
-    let sql = `SELECT * FROM Vini WHERE nome = '${req.params.name}'`;
-    const data = db.prepare(sql).all()[0];
-    res.render('wine', { data });
+    res.render('wine');
 });
 
 /* APIs */
@@ -161,12 +163,12 @@ app.get('/api/catalogo/vini', function (req, res) {
  *                     example: 2015
  */
 app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
-    const sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0"; 
-    let nome =req.params.nome, annata = req.params.annata;
-    if(nome!="NONE") {
-        sql += " AND nome LIKE '%"+nome+"%'"; //NON DEVE ESSERE ESATTAMENTE QUELLO
+    const sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0";
+    let nome = req.params.nome, annata = req.params.annata;
+    if (nome != "NONE") {
+        sql += " AND nome LIKE '%" + nome + "%'"; //NON DEVE ESSERE ESATTAMENTE QUELLO
     }
-    if(annata!=0) sql += " AND annata = "+annata;
+    if (annata != 0) sql += " AND annata = " + annata;
     res.send(db.prepare(sql).all());
 });
 

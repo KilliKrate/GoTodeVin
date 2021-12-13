@@ -4,7 +4,6 @@
 
 <head>
     <%- include('./partials/head.ejs') %>
-    <title><%= data.nome %></title>
 </head>
 
 <body class="d-flex flex-row">
@@ -16,23 +15,23 @@
             <span class="px-2"><i class="fa fa-arrow-left" aria-hidden="true"></i></span>Torna al catalogo
         </a>
         <div class="mt-3 mb-4">
-            <h1 class="display-5 "><%= data.nome %></h1>
+            <h1 class="display-5" id="titolo"></h1>
         </div>
 
         <div class="d-md-flex justify-content-between">
             <img src="resources/images/wine.jpg" alt="wine" style="object-fit: contain;" class="mb-3 mb-md-0 mw-100">
             <div class="d-flex flex-column px-md-5">
-                <p class="lead"><strong><%= data.descrizione %></strong></p>
-                <p class="lead"><strong>Annata: <%= data.annata %></strong></p>
+                <p class="lead"><strong id="descrizione"></strong></p>
+                <p class="lead"><strong id="annata">Annata: </strong></p>
                 <hr>
-                <p class="h3 mt-3 mb-5">€ <%= data.prezzo %></p>
+                <p class="h3 mt-3 mb-5" id="prezzo">€ </p>
                 <div class="d-flex flex-row align-items-center mb-3">
                     <button type="button" class="btn btn-primary">Acquista</button>
                     <div class="mx-4" style="width: 150px !important;">
                         <input type="number" class="form-control" id="quantita" placeholder="Quantità" value="1">
                     </div>
                 </div>
-                <p class="lead">Disponibilità: <%= data.disponibilita %></p>
+                <p class="lead" id="disponibilita">Disponibilità: </p>
             </div>
         </div>
 
@@ -41,9 +40,26 @@
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
+    <script type="module">
+        import {initUsers} from '/resources/scripts/sidenav.mjs';
+
+        async function initData() {
+            const response = await fetch(`http://localhost:8080/api/catalogo/dettaglio${window.location.pathname}`)
+            .then(response => response.json())
+            .then(data => {
+                document.title = data.nome;
+                $("#titolo").append(data.nome)
+                $("#descrizione").append(data.descrizione)
+                $("#annata").append(data.annata)
+                $("#disponibilita").append(data.disponibilita)
+                $("#prezzo").append(data.prezzo)
+            });
+        }
+
+        initData();
+        initUsers();
+    </script>
 </body>
 
-<script>
-</script>
 
 </html>
