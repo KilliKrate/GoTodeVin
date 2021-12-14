@@ -75,6 +75,16 @@ app.get('/:name', (req, res) => {
 //todo: codici di ritorno personalizzati
 //todo: controlla che inserimento ordini e conversione preordini funzioni ancora dopo aggiunta TOTALE
 //todo: il converti perordina dovrebbe controllare che quello che si sta modificando è effettivamente un preordine
+//todo: dettaglio ordine deve controllare che esista altirimenti dà errore
+//todo: carrello controllo esistenza utente in modifica carrello? non dà errore però il messaggio è modifica avvenuta quando in realtà non fa nulla
+//todo: controllo esistenza vino in modifica carrello altrimenti dà errore
+//todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore
+//todo: nell'aggiunta vanno fatti i controlli o dà errore sulla FOREIGN KEY nel caso di utente e undefined sul controllo della disp
+//todo: ricarica verifica che ci siano stati dei cambiamenti altrimenti manda codice errore
+//todo: modifica da parte di gestionale verificare che avvenga altrimenti codice errore di vino non esistente
+//todo: aggiungi in gestionale deve catchare l'errore di unique del database
+//todo: controlla numero modifiche per il stato ordine e controlla che sia un ordine
+
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0].disponibilita;
@@ -163,7 +173,7 @@ app.get('/api/catalogo/vini', function (req, res) {
  *                     example: 2015
  */
 app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
-    const sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0";
+    let sql = "SELECT nome,annata FROM Vini WHERE disponibilita > 0";
     let nome = req.params.nome, annata = req.params.annata;
     if (nome != "NONE") {
         sql += " AND nome LIKE '%" + nome + "%'"; //NON DEVE ESSERE ESATTAMENTE QUELLO
@@ -494,7 +504,7 @@ app.get('/api/carrello/:email', function (req, res) {
  *               email:
  *                  type: string
  *                  description: il cliente che ha richiesto la modifica
- *                  example: RobbieJLavender@dayrep.com
+ *                  example: Pluto@GoToDeMail.com
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -547,7 +557,7 @@ app.post('/api/carrello/modifica', function (req, res) {
  *               email:
  *                  type: string
  *                  description: il cliente che ha richiesto la modifica
- *                  example: RobbieJLavender@dayrep.com
+ *                  example: Pluto@GoToDeMail.com
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -594,7 +604,7 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *               email:
  *                  type: string
  *                  description: il cliente che ha richiesto l'aggiunta
- *                  example: RobbieJLavender@dayrep.com
+ *                  example: Pluto@GoToDeMail.com
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -644,7 +654,7 @@ app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E'
  *               email:
  *                  type: string
  *                  description: il cliente che ha richiesto l'ordinazione
- *                  example: RobbieJLavender@dayrep.com
+ *                  example: Pluto@GoToDeMail.com
  *               metodoPagamento:
  *                  type: string
  *                  description: id del preordine da modificare
@@ -681,8 +691,8 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
 
     let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
     prodotti.forEach((elem) => {
-        let vino = db.prepare(`SELECT disponibilita, prezzo FROM Vini WHERE nome=?`).all(nome)[0]
-        if (vino.disponibilita >= elem.quantita) {
+        let vino = db.prepare(`SELECT disponibilita, prezzo FROM Vini WHERE nome=?`).all(elem.vino)[0]
+        if (vino.disponibilita < elem.quantita) {
             aggiungiPreordine = false;
             viniMancanti += " " + elem.vino;
             totale += elem.quantita * vino.prezzo;
@@ -697,7 +707,7 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
     if (aggiungiPreordine) {
         if (req.body.metodoPagamento == 'wallet' && tipo == 'O') {
             saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(email)[0].saldo;
-            if (saldo >= preordine.totale) {
+            if (saldo >= totale) {
                 db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(totale, email);
             } else {
                 saldoSuff = false;
@@ -856,7 +866,7 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *               email:
  *                  type: string
  *                  description: il cliente che ha richiesto l'ordinazione
- *                  example: RobbieJLavender@dayrep.com
+ *                  example: Pluto@GoToDeMail.com
  *     responses:
  *       200:
  *         description: risultato operazione.
@@ -868,7 +878,7 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *                example: ricarica effettuata
  */
 app.post('/api/wallet/ricarica', function (req, res) {
-    db.prepare(`UPDATE Clienti SET saldo=saldo+${req.body.ricarica} WHERE email='${req.body.email}'`).run();
+    console.log(db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(req.body.ricarica, req.body.email).changes);
     res.send("ricarica effettuata");
 });
 
