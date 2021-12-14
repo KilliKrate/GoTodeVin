@@ -3,15 +3,14 @@
 
 <head>
     <%- include('./partials/head.ejs') %>
-
-    <title>Hello, world!</title>
+    <title>Catalogo Vini</title>
 </head>
 
 <body class="d-flex flex-row">
     <%- include('./partials/sidenav.ejs') %>
 
     <div class="p-5 w-100">
-        <table id="catalogo" class="display w-100">
+        <table id="catalogo" class="display w-100 mt-3">
             <thead>
                 <tr>
                     <th>Nome</th>
@@ -26,7 +25,6 @@
 
     <script type="module">
         import {initUsers} from '/resources/scripts/sidenav.mjs';
-        import {getCookie} from '/resources/scripts/cookie.mjs';
 
         async function initTable() {
             const response = await fetch("http://localhost:8080/api/catalogo/vini")

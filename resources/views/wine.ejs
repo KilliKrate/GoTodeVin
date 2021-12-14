@@ -19,14 +19,14 @@
         </div>
 
         <div class="d-md-flex justify-content-between">
-            <img src="resources/images/wine.jpg" alt="wine" style="object-fit: contain;" class="mb-3 mb-md-0 mw-100">
+            <img src="resources/images/wine.jpg" alt="wine" class="mb-3 mb-md-0 mw-100 img-contain">
             <div class="d-flex flex-column px-md-5">
                 <p class="lead"><strong id="descrizione"></strong></p>
                 <p class="lead"><strong id="annata">Annata: </strong></p>
                 <hr>
                 <p class="h3 mt-3 mb-5" id="prezzo">€ </p>
                 <div class="d-flex flex-row align-items-center mb-3">
-                    <button type="button" class="btn btn-primary">Acquista</button>
+                    <button type="button" id="compra" class="btn btn-primary">Acquista</button>
                     <div class="mx-4" style="width: 150px !important;">
                         <input type="number" class="form-control" id="quantita" placeholder="Quantità" value="1">
                     </div>
@@ -42,18 +42,47 @@
 
     <script type="module">
         import {initUsers} from '/resources/scripts/sidenav.mjs';
+        import {getCookie} from '/resources/scripts/cookie.mjs'
+
+        let wine;
 
         async function initData() {
             const response = await fetch(`http://localhost:8080/api/catalogo/dettaglio${window.location.pathname}`)
             .then(response => response.json())
             .then(data => {
+                wine = data;
+
                 document.title = data.nome;
-                $("#titolo").append(data.nome)
-                $("#descrizione").append(data.descrizione)
-                $("#annata").append(data.annata)
-                $("#disponibilita").append(data.disponibilita)
-                $("#prezzo").append(data.prezzo)
+                $("#titolo").append(data.nome);
+                $("#descrizione").append(data.descrizione);
+                $("#annata").append(data.annata);
+                $("#disponibilita").append(data.disponibilita);
+                $("#prezzo").append(data.prezzo);
+
+                $('#compra').click(function() {
+                    buyWine()
+                });
             });
+        }
+
+        async function buyWine() {
+            if (!getCookie('log-in')) {
+                alert("Log-in first!");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:8080/api/carrello/aggiungi`, {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nome: wine.nome, 
+                    quantita: $('#quantita').val(), 
+                    email: getCookie('log-in')
+                })
+            })
         }
 
         initData();

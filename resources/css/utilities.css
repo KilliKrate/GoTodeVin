@@ -1,3 +1,15 @@
 .clickable {
     cursor: pointer;
 }
+
+.img-contain {
+    object-fit: contain;
+}
+
+.cart-img {
+    width: 100px;
+}
+
+.w-150px {
+    width: 150px;
+}

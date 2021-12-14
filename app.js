@@ -461,7 +461,9 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  *                     example: 15
  */
 app.get('/api/carrello/:email', function (req, res) {
-    const sql = `SELECT vino,quantita FROM Acquistabili WHERE cliente ='${req.params.email}'`;
+    const sql = `SELECT A.vino, A.quantita, V.prezzo FROM Acquistabili A
+                 JOIN Vini V ON A.vino = V.nome 
+                 WHERE cliente ='${req.params.email}'`;
     res.send(db.prepare(sql).all());
 });
 
@@ -504,19 +506,18 @@ app.get('/api/carrello/:email', function (req, res) {
  *                example: modifica avvenuta
  */
 app.post('/api/carrello/modifica', function (req, res) {
-    let sql, quantita = req.body['quantita'], nomeVino = req.body['nomeVino'], utente = req.body['email'], eseguiSql = true;
-
+    let sql;
+    const { body: { quantita, nome, email } } = req, eseguiSql = true;
     if (quantita == 0) {
-        sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${utente}'`;
+        sql = `DELETE FROM Acquistabili WHERE vino='${nome}' AND cliente = '${email}'`;
     }
-    else if (verificaDisponibilita(quantita, nomeVino)) {
-        sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nomeVino}' AND cliente = '${utente}'`;
+    else if (verificaDisponibilita(quantita, nome)) {
+        sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nome}' AND cliente = '${email}'`;
     }
     else {
         res.send("disponibilità insufficiente");
         eseguiSql = false;
     }
-
     if (eseguiSql) {
         db.prepare(sql).run();
         res.send("modifica avvenuta");
@@ -605,16 +606,16 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *                example: aggiunto
  */
 app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E' GIA' IN CARRRELLO DOVREI AGGIUNGERE LA QUANTITA' RICEVUTA O SCARTARE LA MODIFICA?
-    const { body: { quantita, nomeVino, email } } = req;
-    if (quantita == 0 || !verificaDisponibilita(quantita, nomeVino)) {
+    const { body: { nome, quantita, email } } = req;
+    if (quantita == 0 || !verificaDisponibilita(quantita, nome)) {
         res.send("aggiunti 0 vini al carrello");
     }
     else {
-        let esiste = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nomeVino}' AND cliente='${email}'`).all();
+        let esiste = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all();
         if (esiste.length != 0) res.send("vino già presente");
         else {
             sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
-            db.prepare(sql).run(nomeVino, email, quantita);
+            db.prepare(sql).run(nome, email, quantita);
             res.send("aggiunto");
         }
     }
