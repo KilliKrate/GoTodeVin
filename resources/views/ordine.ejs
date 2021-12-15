@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+
+<head>
+    <%- include('./partials/head.ejs') %>
+</head>
+
+<body class="d-flex flex-row">
+
+    <%- include('./partials/sidenav.ejs') %>
+
+    <div class="p-5 w-100">
+
+
+    </div>
+
+    <%- include('./partials/bottom_scripts.ejs') %>
+
+    <script type="module">
+        import {initUsers} from '/resources/scripts/sidenav.mjs';
+        import {getCookie} from '/resources/scripts/cookie.mjs'
+
+        async function initOrdine() {
+            const response = fetch(`/api/ordini/dettaglio/${window.location.pathname.split('/')[2]}`)
+            .then(response => response.json())
+            .then(data => console.log(data));
+        }
+
+        initOrdine();
+        initUsers();
+    </script>
+</body>
+
+
+</html>

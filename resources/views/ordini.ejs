@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <%- include('./partials/head.ejs') %>
+    <title>Ordini</title>
+</head>
+
+<body class="d-flex flex-row">
+    <%- include('./partials/sidenav.ejs') %>
+
+    <div class="p-5 w-100">
+        <table id="ordini" class="display w-100 mt-3">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo</th>
+                    <th>Data Creazione</th>
+                    <th>Stato</th>
+                    <th>Totale</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+
+    <%- include('./partials/bottom_scripts.ejs') %>
+
+    <script type="module">
+        import {initUsers} from '/resources/scripts/sidenav.mjs';
+        import {getCookie} from '/resources/scripts/cookie.mjs';
+
+        let ordini;
+
+        async function initOrdini() {
+            if (!getCookie('log-in')) {
+                alert("Log-in first!");
+                return;
+            }
+
+            const response = await fetch(`http://localhost:8080/api/ordini/${getCookie('log-in')}`)
+            .then(response => response.json())
+            .then(data => data.forEach(element => {
+                element.tipo = (element.tipo == 'O' ? 'Ordine' : 'Preordine');
+                ordini = data;
+            }))
+
+            console.log(ordini);
+
+            $("#ordini").DataTable({
+                data: ordini,
+                columns: [{
+                    data: "id"
+                }, {
+                    data: "tipo"
+                }, {
+                    data: "data_creazione"
+                }, {
+                    data: "stato"
+                }, {
+                    data: "totale"
+                }],
+                "createdRow": function (row, data, dataIndex) {
+                    $(row).addClass("clickable");
+                }
+            });
+            
+            $("#ordini").on("click", "tbody tr", function () {
+                window.location.href = `/ordini/${encodeURIComponent(this.firstElementChild.textContent.trim())}`;
+            });
+
+        }
+
+        initOrdini();
+        initUsers();
+    </script>
+</body>
+
+</html>

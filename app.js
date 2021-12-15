@@ -3,9 +3,6 @@ var app = express();
 
 app.use('/resources', express.static(__dirname + '/resources'));
 
-//var jquery = require('jquery');
-//var datatables = require('datatables.net-bs5')();
-
 var cors = require('cors');
 app.use(cors());
 
@@ -65,9 +62,19 @@ app.get('/carrello', (req, res) => {
     res.render('carrello')
 });
 
+app.get('/ordini', (req, res) => {
+    res.render('ordini');
+});
+
+app.get('/ordini/:id', (req, res) => {
+    res.render('ordine')
+});
+
 app.get('/:name', (req, res) => {
     res.render('wine');
 });
+
+
 
 /* APIs */
 
@@ -316,7 +323,8 @@ app.get('/api/assistenza', function (req, res) {
  *                     example: 2021-11-28T15:58:56.000
  */
 app.get('/api/ordini/:email', function (req, res) {
-    const sql = `SELECT id, tipo, stato, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${req.params.email}'`;
+    // TODO: mi interessa anche il totale, l'ho aggiunto alla query
+    const sql = `SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${req.params.email}'`;
     const ordini = db.prepare(sql).all();
     const dataPresente = new Date();
     let dateParts, d;
@@ -514,6 +522,14 @@ app.get('/api/carrello/:email', function (req, res) {
  *                type: string
  *                description: risultato operazione
  *                example: modifica avvenuta
+ *       400:
+ *         description: risultato operazione.
+ *         content:
+ *           text/plain:
+ *             schema:
+ *                type: string
+ *                description: risultato operazione
+ *                example: disponibilità insufficiente
  */
 app.post('/api/carrello/modifica', function (req, res) {
     let sql;
@@ -525,6 +541,7 @@ app.post('/api/carrello/modifica', function (req, res) {
         sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nome}' AND cliente = '${email}'`;
     }
     else {
+        res.code(400);
         res.send("disponibilità insufficiente");
         eseguiSql = false;
     }
@@ -703,8 +720,8 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
         if (vino.disponibilita < elem.quantita) {
             aggiungiPreordine = false;
             viniMancanti += " " + elem.vino;
-            totale += elem.quantita * vino.prezzo;
         }
+        totale += elem.quantita * vino.prezzo;
     });
 
     if (prodotti.length == 0) {
