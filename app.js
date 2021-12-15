@@ -629,10 +629,13 @@ app.post('/api/carrello/aggiungi', function (req, res) { // TODO: Update Descriz
     else if (vino.length != 0 && !verificaDisponibilita(Number.parseInt(vino[0].quantita) + quantita, nome)) {
         res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" })
     }
-    else {
+    else if (verificaDisponibilita(quantita, nome)) {
         sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
         db.prepare(sql).run(nome, email, quantita);
-        res.send({ aggiunto: false, messaggio: "Vino aggiunto al carrello!" });
+        res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
+    }
+    else {
+        res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" });
     }
 });
 
@@ -691,7 +694,7 @@ app.post('/api/carrello/aggiungi', function (req, res) { // TODO: Update Descriz
  *                example: saldo insufficente
  */
 app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
-    const { body: { email, tipo } } = req;
+    const { body: { email, tipo, metodoPagamento } } = req;
     let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:", totale = 0, saldoSuff = true;
 
     let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
@@ -710,7 +713,7 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
     }
 
     if (aggiungiPreordine) {
-        if (req.body.metodoPagamento == 'wallet' && tipo == 'O') {
+        if (metodoPagamento == 'wallet' && tipo == 'O') {
             saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(email)[0].saldo;
             if (saldo >= totale) {
                 db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(totale, email);
@@ -723,7 +726,7 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
             stato = (tipo == 'O') ? "inLavorazione" : "attesaPagamento";
 
             data = new Date().toISOString().replace('Z', '').replace('T', ' ');
-            id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente, totale) VALUES (?, ?, ?, ?)").run(tipo, stato, data, email, totale);
+            id = db.prepare("INSERT INTO Ordini (tipo,stato,data_creazione,cliente,totale,metodoPagamento) VALUES (?, ?, ?, ?, ?, ?)").run(tipo, stato, data, email, totale, metodoPagamento);
             id = id.lastInsertRowid;
 
             prodotti.forEach((elem) => {

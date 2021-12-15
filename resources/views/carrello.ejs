@@ -23,10 +23,38 @@
         </div>
 
         <div class="d-flex w-100 justify-content-end" id="buttons">
-            <button type="button" class="btn btn-primary me-5">Compra</button>
-            <button type="button" class="btn btn-secondary">Preordina</button>
+            <button id="buyBtn" type="button" class="btn btn-primary me-5" data-bs-toggle="modal"
+                data-bs-target="#ordinaVino">Compra</button>
+            <button id="preorderBtn" type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                data-bs-target="#ordinaVino">Preordina</button>
         </div>
 
+    </div>
+
+    <div class="modal fade" id="ordinaVino" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Modal title</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="paymentForm">
+                    <div class="modal-body">
+                        <input type="text" name="type" hidden id="op-type">
+                        <input type="radio" class="btn-check" name="payment" id="wallet" autocomplete="off" checked>
+                        <label class="btn btn-outline-primary" for="wallet">Wallet</label>
+                        <input type="radio" class="btn-check" name="payment" id="paypal" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="paypal">PayPal</label>
+                        <input type="radio" class="btn-check" name="payment" id="pagopa" autocomplete="off">
+                        <label class="btn btn-outline-primary" for="pagopa">PagoPA</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="modalSubmit">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
@@ -72,7 +100,24 @@
 
             $('.delete-btn').click(function() {
                 deleteItem($(this).data('index'));
-            })
+            });
+
+            $('#preorderBtn').click(function() {
+                $('#modalTitle').text('Preordina Carrello')
+                $('#modalSubmit').text('Preordina')
+                $('#op-type').val('P')
+            });
+
+            $('#buyBtn').click(function() {
+                $('#modalTitle').text('Acquista Vini')
+                $('#modalSubmit').text('Acquista')
+                $('#op-type').val('O')                
+            });
+
+            $('#paymentForm').submit(function(e) {
+                submitPayment($('input[name="payment"]:checked').attr('id'), $('#op-type').val());
+                return false;
+            });
         })
     }
 
@@ -93,12 +138,26 @@
         location.reload();
     }
 
+    async function submitPayment(paymentType, orderType) {
+        const response = await fetch(`/api/carrello/pre-ordina`, {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    email: getCookie('log-in'),
+                    metodoPagamento: paymentType,
+                    tipo: orderType
+                })
+        }).then(response => console.log(response));
+        location.reload();
+    }
+
     await initUsers();
     await initCart();
-
-    console.log(carrello);
     
-    if(!carrello.length) {
+    if(carrello == undefined || !carrello.length) {
         $('#buttons').remove();
     } else {
         $('#empty-cart').remove();
