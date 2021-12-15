@@ -31,6 +31,7 @@
                         <input type="number" class="form-control" id="quantita" placeholder="Quantità" value="1">
                     </div>
                 </div>
+                <p id="esito"></p>
                 <p class="lead" id="disponibilita">Disponibilità: </p>
             </div>
         </div>
@@ -82,6 +83,14 @@
                     quantita: $('#quantita').val(), 
                     email: getCookie('log-in')
                 })
+            }).then(response => response.json()).then(data => {
+                $('#esito').removeClass('text-success')
+                $('#esito').removeClass('text-danger')
+                if (data.aggiunto){
+                    $('#esito').addClass('text-success').text(data.messaggio);
+                } else {
+                    $('#esito').addClass('text-danger').text(data.messaggio);
+                }
             })
         }
 

@@ -568,8 +568,8 @@ app.post('/api/carrello/modifica', function (req, res) {
  *                description: risultato operazione
  *                example: eliminato
  */
-app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA RISPOSTA PARTICOLARE SE IL VINO NON C'ERA NEL CARRELLO?
-    // Ti insegno una piccola furbata per non dover fare sempre tutte queste variabili all'inizio dove destrutturi il json
+
+app.delete('/api/carrello/modifica', function (req, res) { // TODO: METTERE UNA RISPOSTA PARTICOLARE SE IL VINO NON C'ERA NEL CARRELLO
     const { body: { nomeVino, email } } = req
     const sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${email}'`;
 
@@ -615,19 +615,24 @@ app.delete('/api/carrello/modifica', function (req, res) { //DOVRE METTERE UNA R
  *                description: risultato operazione
  *                example: aggiunto
  */
-app.post('/api/carrello/aggiungi', function (req, res) { // QUANDO L'ELEMENTO E' GIA' IN CARRRELLO DOVREI AGGIUNGERE LA QUANTITA' RICEVUTA O SCARTARE LA MODIFICA?
-    const { body: { nome, quantita, email } } = req;
-    if (quantita == 0 || !verificaDisponibilita(quantita, nome)) {
-        res.send("aggiunti 0 vini al carrello");
+app.post('/api/carrello/aggiungi', function (req, res) { // TODO: Update Descrizione!
+    let { body: { nome, quantita, email } } = req;
+    quantita = Number.parseInt(quantita);
+
+    let vino = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all();
+
+    if (vino.length != 0 && verificaDisponibilita(vino[0].quantita + quantita, nome)) {
+        sql = `UPDATE Acquistabili SET quantita = ${quantita + vino[0].quantita} WHERE vino = '${nome}' AND cliente = '${email}'`
+        db.prepare(sql).run();
+        res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
+    }
+    else if (vino.length != 0 && !verificaDisponibilita(Number.parseInt(vino[0].quantita) + quantita, nome)) {
+        res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" })
     }
     else {
-        let esiste = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all();
-        if (esiste.length != 0) res.send("vino già presente");
-        else {
-            sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
-            db.prepare(sql).run(nome, email, quantita);
-            res.send("aggiunto");
-        }
+        sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
+        db.prepare(sql).run(nome, email, quantita);
+        res.send({ aggiunto: false, messaggio: "Vino aggiunto al carrello!" });
     }
 });
 
