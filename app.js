@@ -81,8 +81,6 @@ app.get('/:name', (req, res) => {
 //todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
 // VOGLIO CAMBIARE IL DETTAGLIO ORDINE E TOGLIERE IL TRUE O FALSE NON PUOI INVECE FARE UNA VERIFICA SUL CODICE DI RITORNO?
 //todo: la pagina degli ordini non controlla nemmeno il booleano inviato e mostra la pagina anche per un ordine inesistente
-//todo: aggiungi in gestionale deve catchare l'errore di unique del database
-//todo: controlla numero modifiche per il stato ordine e controlla che sia un ordine
 //todo: aggiungi nel DB ad acquistabili il loro totale come anche a Vino_Ordine così da avere il sub totale e il totale nel carrello
 //todo: modifica calcolo prezzo pre-ordina
 //todo: non funziona scadenza
@@ -812,11 +810,11 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
     let id, stato, data, prodotti = db.prepare(`SELECT * FROM Acquistabili WHERE cliente='${email}'`).all();
     prodotti.forEach((elem) => {
         let vino = db.prepare(`SELECT disponibilita, prezzo FROM Vini WHERE nome=?`).all(elem.vino)[0]
-        if (vino.disponibilita < elem.quantita) {
+        if (!verificaDisponibilita(elem.quantita, emlem.vino)) {
             aggiungiPreordine = false;
             viniMancanti += " " + elem.vino;
         }
-        totale += elem.quantita * vino.prezzo;
+        totale += calcolaPrezzo(elem.quantita, elem.vino);
     });
 
     if (prodotti.length == 0) {
@@ -1413,31 +1411,27 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
     const { body: { idOrdine, stato } } = req;
     const data = new Date().toISOString().replace('Z', '').replace('T', ' ');
     let modifiche;
+    const ordine = db.prepare("SELECT * FROM Ordini WHERE id=?").all(idOrdine)[0];
 
-    switch (stato) {
-        case "daRitirare":
-            modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
-            if(modifiche.changes>0){
+    if(ordine && ordine.tipo == "O"){
+        switch (stato) {
+            case "daRitirare":
+                modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
                 res.send("ordine modificato");
-            }else{
-                res.status(400);
-                res.send("ordine inesistente")
-            }
-            break;
+                break;
 
-        case "evaso":
-            modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
-            if(modifiche.changes>0){
+            case "evaso":
+                modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
                 res.send("ordine modificato");
-            }else{
-                res.status(400);
-                res.send("ordine inesistente")
-            }
-            break;
+                break;
 
-        default:
-            res.status(400);
-            res.send("richiesta malformata")
+            default:
+                res.status(400);
+                res.send("richiesta malformata")
+        }
+    }else{
+        res.status(400);
+        res.send("ordine inesistente")
     }
 });
 
