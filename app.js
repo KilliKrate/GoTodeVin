@@ -78,18 +78,24 @@ app.get('/:name', (req, res) => {
 
 /* APIs */
 
-//todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
-//todo: codici di ritorno personalizzati
 //todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
-//todo: get saldo cosa deve dare se non trova il cliente ora semplicemente ritorna undefined credo CHIEDI
-//todo: modifica da parte di gestionale verificare che avvenga altrimenti codice errore di vino non esistente
+// VOGLIO CAMBIARE IL DETTAGLIO ORDINE E TOGLIERE IL TRUE O FALSE NON PUOI INVECE FARE UNA VERIFICA SUL CODICE DI RITORNO?
+//todo: la pagina degli ordini non controlla nemmeno il booleano inviato e mostra la pagina anche per un ordine inesistente
 //todo: aggiungi in gestionale deve catchare l'errore di unique del database
 //todo: controlla numero modifiche per il stato ordine e controlla che sia un ordine
+//todo: aggiungi nel DB ad acquistabili il loro totale come anche a Vino_Ordine così da avere il sub totale e il totale nel carrello
+//todo: modifica calcolo prezzo pre-ordina
+//todo: non funziona scadenza
 
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0];
     return (disp && disp.disponibilita >= quantita);
+}
+
+function calcolaPrezzo(quantita, vino) {
+    let prezzo = db.prepare(`SELECT prezzo FROM Vini WHERE nome=?`).all(nome)[0];
+    return(prezzo*quantita);
 }
 
 //CATALOGO
@@ -227,10 +233,23 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
  *                     type: float
  *                     description: prezzo del vino.
  *                     example: 15.3
+ *       404:
+ *         description: vino non trovato.
+ *         text/plain:
+ *           schema:
+ *              type: string
+ *              description: risultato operazione
+ *              example: vino non trovato
  */
 app.get('/api/catalogo/dettaglio/:name', function (req, res) {
     const sql = `SELECT * FROM Vini WHERE nome = '${req.params.name}'`;
-    res.send(db.prepare(sql).all()[0]);
+    const wine = db.prepare(sql).all()[0];
+    if(wine){
+        res.send(wine);
+    }else{
+        res.status(404);
+        res.send("vino non trovato")
+    }
 });
 
 //ASSISTENZA
@@ -434,8 +453,8 @@ app.get('/api/ordini/:email', function (req, res) {
  *                               type: integer
  *                               description: quantità in carrello.
  *                               example: 15
- *       400:
- *         description: richiesta malformata.
+ *       404:
+ *         description: ordine non trovato.
  *         content:
  *           application/json:
  *             schema:
@@ -462,7 +481,7 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
         ordine.vini = vini;
         res.send({ risultato: true, ordine: ordine });
     } else {
-        res.status(400);
+        res.status(404);
         res.send({ risultato: false, messaggio: "ordine inesistente" })
     }
 });
@@ -939,9 +958,22 @@ app.get('/api/utenti/:email', function (req, res) {
  *                     type: float
  *                     description: saldo.
  *                     example: 15.8
+ *       404:
+ *         description: utente non trovato.
+ *         text/plain:
+ *           schema:
+ *             type: string
+ *             description: risultato operazione
+ *             example: email non registrata
  */
 app.get('/api/wallet/saldo/:email', function (req, res) {
-    res.send(db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all()[0]);
+    const saldo = db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all()[0];
+    if(saldo){
+        res.send(saldo);
+    }else{
+        res.status(404);
+        res.send("email non registrata")
+    }
 });
 
 /**
@@ -1240,9 +1272,16 @@ app.get('/api/produttore/dettaglio_ordini', function (req, res) {
  */
 app.post('/api/gestionale/giacenza', function (req, res) {
     const { body: { nomeVino, quantita } } = req;
+    let modifiche;
+
     if (quantita >= -1) { //-1 sta per prodotto non più rifornito
-        db.prepare(`UPDATE Vini SET disponibilita = ${quantita} WHERE nome='${nomeVino}'`).run();
-        res.send("vino specificato modificato")
+        modifiche = db.prepare(`UPDATE Vini SET disponibilita = ${quantita} WHERE nome='${nomeVino}'`).run();
+        if(modifiche.changes>0){
+            res.send("vino specificato modificato")
+        }else{
+            res.status(400);
+            res.send("il vino che si vuole modificare non esiste")
+        }
     } else {
         res.status(400);
         res.send("la quantità specificata non è valida");
@@ -1307,8 +1346,13 @@ app.post('/api/gestionale/creaVino', function (req, res) {
     const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req;
 
     if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0) {
-        db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino, annata, descrizione, disponibilita, prezzo);
-        res.send("vino inserito");
+        try{
+            db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino, annata, descrizione, disponibilita, prezzo);
+            res.send("vino inserito");
+        }catch(e){
+            res.status(400);
+            res.send("vino già presente");
+        }
     } else {
         res.status(400);
         res.send("richiesta malformata");
@@ -1368,16 +1412,27 @@ app.post('/api/gestionale/creaVino', function (req, res) {
 app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
     const { body: { idOrdine, stato } } = req;
     const data = new Date().toISOString().replace('Z', '').replace('T', ' ');
+    let modifiche;
 
     switch (stato) {
         case "daRitirare":
-            db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
-            res.send("ordine modificato");
+            modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
+            if(modifiche.changes>0){
+                res.send("ordine modificato");
+            }else{
+                res.status(400);
+                res.send("ordine inesistente")
+            }
             break;
 
         case "evaso":
-            db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
-            res.send("ordine modificato");
+            modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
+            if(modifiche.changes>0){
+                res.send("ordine modificato");
+            }else{
+                res.status(400);
+                res.send("ordine inesistente")
+            }
             break;
 
         default:
