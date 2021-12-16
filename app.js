@@ -33,7 +33,7 @@ const swaggerOptions = {
                 url: 'https://spdx.org/licenses/MIT.html',
             },
             contact: {
-                name: 'Group36',
+                name: 'Group 36',
                 url: 'http://localhost:8080/',
             },
         },
@@ -81,7 +81,7 @@ app.get('/:name', (req, res) => {
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
 //todo: codici di ritorno personalizzati
 //todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
-//todo: ricarica verifica che ci siano stati dei cambiamenti altrimenti manda codice errore
+//todo: get saldo cosa deve dare se non trova il cliente ora semplicemente ritorna undefined credo CHIEDI
 //todo: modifica da parte di gestionale verificare che avvenga altrimenti codice errore di vino non esistente
 //todo: aggiungi in gestionale deve catchare l'errore di unique del database
 //todo: controlla numero modifiche per il stato ordine e controlla che sia un ordine
@@ -303,6 +303,10 @@ app.get('/api/assistenza', function (req, res) {
  *                     type: string
  *                     description: O per gli ordini P per i preordini.
  *                     example: O
+ *                   totale:
+ *                     type: float
+ *                     description: costo totale ordine.
+ *                     example: 150.7
  *                   stato:
  *                     type: string
  *                     description: stato dell'ordine che identifica in che fase della sua vita si trova.
@@ -317,7 +321,7 @@ app.get('/api/assistenza', function (req, res) {
  *                     example: 2021-11-28T15:58:56.000
  */
 app.get('/api/ordini/:email', function (req, res) {
-    // TODO: mi interessa anche il totale, l'ho aggiunto alla query
+    // TODO: mi interessa anche il totale, l'ho aggiunto alla query FATTO?
     const sql = `SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${req.params.email}'`;
     const ordini = db.prepare(sql).all();
     const dataPresente = new Date();
@@ -966,17 +970,46 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
  *                  example: Pluto@GoToDeMail.com
  *     responses:
  *       200:
- *         description: risultato operazione.
+ *         description: ricarica eseguita.
  *         content:
- *           text/plain:
- *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: ricarica effettuata
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               risposta:
+ *                 type: boolean
+ *                 description: risultato operazione
+ *                 example: true
+ *               messaggio:
+ *                 type: string
+ *                 description: risultato operazione
+ *                 example: ricarica effettuata
+ *       400:
+ *         description: ricarica fallita.
+ *         content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               risposta:
+ *                 type: boolean
+ *                 description: risultato operazione
+ *                 example: false
+ *               messaggio:
+ *                 type: string
+ *                 description: risultato operazione
+ *                 example: richiesta malformata
  */
 app.post('/api/wallet/ricarica', function (req, res) {
-    console.log(db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(req.body.ricarica, req.body.email).changes);
-    res.send("ricarica effettuata");
+    const { body: { email, ricarica } } = req;
+    const utente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
+    if(utente && ricarica>0){
+        console.log(db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(ricarica, email).changes);
+        res.send({risposta:true, messaggio:"ricarica effettuata"});
+    }else{
+        res.status(400);
+        res.send({risposta:false, messaggio:"richiesta malformata"})
+    }
 });
 
 //PREORDINE
