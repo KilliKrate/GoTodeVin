@@ -80,13 +80,7 @@ app.get('/:name', (req, res) => {
 
 //todo: SAREBBE DA CATCHARE GLI ERRORI GENERATI DALLE QUERY
 //todo: codici di ritorno personalizzati
-//todo: controlla che inserimento ordini e conversione preordini funzioni ancora dopo aggiunta TOTALE
-//todo: il converti perordina dovrebbe controllare che quello che si sta modificando è effettivamente un preordine
-//todo: dettaglio ordine deve controllare che esista altirimenti dà errore
-//todo: carrello controllo esistenza utente in modifica carrello? non dà errore però il messaggio è modifica avvenuta quando in realtà non fa nulla
-//todo: controllo esistenza vino in modifica carrello altrimenti dà errore
-//todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore
-//todo: nell'aggiunta vanno fatti i controlli o dà errore sulla FOREIGN KEY nel caso di utente e undefined sul controllo della disp
+//todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
 //todo: ricarica verifica che ci siano stati dei cambiamenti altrimenti manda codice errore
 //todo: modifica da parte di gestionale verificare che avvenga altrimenti codice errore di vino non esistente
 //todo: aggiungi in gestionale deve catchare l'errore di unique del database
@@ -94,8 +88,8 @@ app.get('/:name', (req, res) => {
 
 
 function verificaDisponibilita(quantita, nome) {
-    let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0].disponibilita;
-    return (disp >= quantita);
+    let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0];
+    return (disp && disp.disponibilita >= quantita);
 }
 
 //CATALOGO
@@ -383,51 +377,74 @@ app.get('/api/ordini/:email', function (req, res) {
  *             schema:
  *                 type: object
  *                 properties:
- *                   id:
- *                     type: integer
- *                     description: L'id dell'ordine o preordine.
- *                     example: 1
- *                   tipo:
+ *                   risultato:
+ *                     type: boolean
+ *                     description: risultato operazione
+ *                     example: true
+ *                   ordine:
+ *                     type: object
+ *                     description: dettagli ordine
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: L'id dell'ordine o preordine.
+ *                         example: 1
+ *                       tipo:
+ *                         type: string
+ *                         description: O per gli ordini P per i preordini.
+ *                         example: O
+ *                       qr:
+ *                         type: string
+ *                         description: path all'immagine contenente il QR.
+ *                         example: localhost:8080/resources/images/qr.png
+ *                       locker:
+ *                         type: integer
+ *                         description: numero del locker in cui l'ordine è stato inserito.
+ *                         example: O
+ *                       stato:
+ *                         type: string
+ *                         description: stato dell'ordine che identifica in che fase della sua vita si trova.
+ *                         example: inLavorazione
+ *                       data_creazione:
+ *                         type: string
+ *                         description: data creazione.
+ *                         example: 2021-11-28T15:48:56.000
+ *                       data_ritirabile:
+ *                         type: string
+ *                         description: data di quando l'ordine è stato inserito nel locker ed è in attesa di essere ritirato.
+ *                         example: 2021-11-28T15:58:56.000
+ *                       data_ritirato:
+ *                         type: string
+ *                         description: data di quando l'ordine è stato ritirato.
+ *                         example: 2021-11-28T16:00:56.000
+ *                       vini:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             vino:
+ *                               type: string
+ *                               description: nome del vino.
+ *                               example: Sauvignon
+ *                             quantita:
+ *                               type: integer
+ *                               description: quantità in carrello.
+ *                               example: 15
+ *       400:
+ *         description: richiesta malformata.
+ *         content:
+ *           application/json:
+ *             schema:
+ *                 type: object
+ *                 properties:
+ *                   risultato:
+ *                     type: boolean
+ *                     description: risultato operazione
+ *                     example: true
+ *                   messaggio:
  *                     type: string
- *                     description: O per gli ordini P per i preordini.
- *                     example: O
- *                   qr:
- *                     type: string
- *                     description: path all'immagine contenente il QR.
- *                     example: localhost:8080/resources/images/qr.png
- *                   locker:
- *                     type: integer
- *                     description: numero del locker in cui l'ordine è stato inserito.
- *                     example: O
- *                   stato:
- *                     type: string
- *                     description: stato dell'ordine che identifica in che fase della sua vita si trova.
- *                     example: inLavorazione
- *                   data_creazione:
- *                     type: string
- *                     description: data creazione.
- *                     example: 2021-11-28T15:48:56.000
- *                   data_ritirabile:
- *                     type: string
- *                     description: data di quando l'ordine è stato inserito nel locker ed è in attesa di essere ritirato.
- *                     example: 2021-11-28T15:58:56.000
- *                   data_ritirato:
- *                     type: string
- *                     description: data di quando l'ordine è stato ritirato.
- *                     example: 2021-11-28T16:00:56.000
- *                   vini:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         vino:
- *                           type: string
- *                           description: nome del vino.
- *                           example: Sauvignon
- *                         quantita:
- *                           type: integer
- *                           description: quantità in carrello.
- *                           example: 15
+ *                     description: messaggio errore
+ *                     example: ordine inesistente
  */
 app.get('/api/ordini/dettaglio/:id', function (req, res) {
     const idOrdine = req.params.id;
@@ -437,8 +454,13 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
     sql = "SELECT * FROM Ordini WHERE id=" + idOrdine + " LIMIT 1";
     let ordine = db.prepare(sql).all()[0];
 
-    ordine.vini = vini;
-    res.send(ordine);
+    if(ordine){
+        ordine.vini = vini;
+        res.send({risultato:true, ordine:ordine});
+    }else{
+        res.status(400);
+        res.send({risultato:false, messaggio:"ordine inesistente"})
+    }
 });
 
 //CARRELLO
@@ -505,7 +527,7 @@ app.get('/api/carrello/:email', function (req, res) {
  *                  type: integer
  *                  description: quantità dell'elemento da cambiare.
  *                  example: 10
- *               nomeVino:
+ *               nome:
  *                  type: string
  *                  description: il nome del vino a cui si riferisce la modifica.
  *                  example: Sauvignon
@@ -519,35 +541,58 @@ app.get('/api/carrello/:email', function (req, res) {
  *         content:
  *           text/plain:
  *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: modifica avvenuta
+ *               type: object
+ *               properties:
+ *                 risultato:
+ *                   type: boolean
+ *                   description: risultato operazione
+ *                   example: true
+ *                 messaggio:
+ *                   type: string
+ *                   description: risultato operazione
+ *                   example: modifica avvenuta
  *       400:
  *         description: risultato operazione.
  *         content:
  *           text/plain:
  *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: disponibilità insufficiente
+ *               type: object
+ *               properties:
+ *                 risultato:
+ *                   type: boolean
+ *                   description: risultato operazione
+ *                   example: false
+ *                 messaggio:
+ *                   type: string
+ *                   description: risultato operazione
+ *                   example: richiesta malformata
  */
 app.post('/api/carrello/modifica', function (req, res) {
-    let sql;
     const { body: { quantita, nome, email } } = req, eseguiSql = true;
-    if (quantita == 0) {
-        sql = `DELETE FROM Acquistabili WHERE vino='${nome}' AND cliente = '${email}'`;
-    }
-    else if (verificaDisponibilita(quantita, nome)) {
-        sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nome}' AND cliente = '${email}'`;
-    }
-    else {
-        res.code(400);
-        res.send("disponibilità insufficiente");
-        eseguiSql = false;
-    }
-    if (eseguiSql) {
-        db.prepare(sql).run();
-        res.send("modifica avvenuta");
+    let sql, vino = db.prepare("SELECT * FROM Vini WHERE nome=?").all(nome)[0], modifiche;
+    if(vino && quantita>=0){
+        if (quantita == 0) {
+            sql = `DELETE FROM Acquistabili WHERE vino='${nome}' AND cliente = '${email}'`;
+        }
+        else if (verificaDisponibilita(quantita, nome)) {
+            sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nome}' AND cliente = '${email}'`;
+        }
+        else {
+            res.send({risultato:false, messaggio:"disponibilità insufficiente"});
+            eseguiSql = false;
+        }
+        if (eseguiSql) {
+            modifiche = db.prepare(sql).run();
+            if(modifiche.changes!=0) res.send({risultato:true, messaggio:"modifica avvenuta"});
+            else{
+                //o era sbagliato l'utente o io non avevo l'acquistabile nel mio carrello
+                res.status(400);
+                res.send({risultato:false, messaggio:"richiesta malformata"});
+            }
+        }
+    }else{
+        res.status(400);
+        res.send({risultato:false, messaggio:"richiesta malformata"})
     }
 });
 
@@ -567,7 +612,7 @@ app.post('/api/carrello/modifica', function (req, res) {
  *           schema:
  *             type: object
  *             properties:
- *               nomeVino:
+ *               nome:
  *                  type: string
  *                  description: il nome del vino a cui si riferisce la modifica.
  *                  example: Sauvignon
@@ -587,7 +632,7 @@ app.post('/api/carrello/modifica', function (req, res) {
  */
 
 app.delete('/api/carrello/modifica', function (req, res) { // TODO: METTERE UNA RISPOSTA PARTICOLARE SE IL VINO NON C'ERA NEL CARRELLO
-    const { body: { nomeVino, email } } = req
+    const { body: { nome, email } } = req
     const sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${email}'`;
 
     db.prepare(sql).run();
@@ -614,7 +659,7 @@ app.delete('/api/carrello/modifica', function (req, res) { // TODO: METTERE UNA 
  *                  type: integer
  *                  description: quanti vini voglio aggiungere al carrello
  *                  example: 8
- *               nomeVino:
+ *               nome:
  *                  type: string
  *                  description: il nome del vino da aggiungere.
  *                  example: Sauvignon
@@ -626,33 +671,60 @@ app.delete('/api/carrello/modifica', function (req, res) { // TODO: METTERE UNA 
  *       200:
  *         description: risultato operazione.
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: aggiunto
+ *               type: object
+ *               properties:
+ *                 aggiunto:
+ *                   type: boolean
+ *                   description: aggiunto o no
+ *                   example: true
+ *                 messaggio:
+ *                   type: string
+ *                   description: risultato operazione
+ *                   example: Vino aggiunto al carrello!
+ *       400:
+ *         description: richiesta malformata.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 aggiunto:
+ *                   type: boolean
+ *                   description: risultato
+ *                   example: false
+ *                 messaggio:
+ *                   type: string
+ *                   description: risultato operazione
+ *                   example: richiesta malformata
  */
-app.post('/api/carrello/aggiungi', function (req, res) { // TODO: Update Descrizione!
-    let { body: { nome, quantita, email } } = req;
-    quantita = Number.parseInt(quantita);
+app.post('/api/carrello/aggiungi', function (req, res) {
+    let { body: { quantita, nome, email } } = req;
 
-    let vino = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all();
+    let vino = db.prepare("SELECT * FROM Vini WHERE nome=?").all(nome)[0], utente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
 
-    if (vino.length != 0 && verificaDisponibilita(vino[0].quantita + quantita, nome)) {
-        sql = `UPDATE Acquistabili SET quantita = ${quantita + vino[0].quantita} WHERE vino = '${nome}' AND cliente = '${email}'`
-        db.prepare(sql).run();
-        res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
-    }
-    else if (vino.length != 0 && !verificaDisponibilita(Number.parseInt(vino[0].quantita) + quantita, nome)) {
-        res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" })
-    }
-    else if (verificaDisponibilita(quantita, nome)) {
-        sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
-        db.prepare(sql).run(nome, email, quantita);
-        res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
-    }
-    else {
-        res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" });
+    if(vino && quantita>0 && utente){
+        vino = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all()
+        if (vino.length != 0 && verificaDisponibilita(vino[0].quantita + quantita, nome)) {
+            sql = `UPDATE Acquistabili SET quantita = ${quantita + vino[0].quantita} WHERE vino = '${nome}' AND cliente = '${email}'`
+            db.prepare(sql).run();
+            res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
+        }
+        else if (vino.length != 0 && !verificaDisponibilita(vino[0].quantita + quantita, nome)) {
+            res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" })
+        }
+        else if (verificaDisponibilita(quantita, nome)) {
+            sql = "INSERT INTO Acquistabili (vino, cliente, quantita) VALUES (?,?,?)";
+            db.prepare(sql).run(nome, email, quantita);
+            res.send({ aggiunto: true, messaggio: "Vino aggiunto al carrello!" });
+        }
+        else {
+            res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" });
+        }
+    }else{
+        res.status(400);
+        res.send({ aggiunto: false, messaggio: "richiesta malformata" });
     }
 });
 
@@ -918,10 +990,11 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *     summary: converti un preordine.
  *     description: il preordine è stato pagato e viene convertito.
  *     requestBody:
- *       descrizione: id del preordine da modificare
+ *       description: id del preordine da modificare e metodo pagamento (scelto tra wallet, pagopa e paypal)
  *       required: true
  *       content:
  *         application/json:
+ *           description: il preordine è stato pagato e viene convertito.
  *           schema:
  *             type: object
  *             properties:
@@ -931,47 +1004,81 @@ app.post('/api/wallet/ricarica', function (req, res) {
  *                  example: 1
  *               metodoPagamento:
  *                  type: string
- *                  description: id del preordine da modificare
+ *                  description: metodo pagamento
  *                  example: wallet
  *     responses:
  *       200:
  *         description: risultato operazione.
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: ordine creato
+ *                 type: object
+ *                 properties:
+ *                   risultato:
+ *                     type: boolean
+ *                     description: risultato operazione.
+ *                     example: true
+ *                   descrizione:
+ *                     type: string
+ *                     description: specifica operazione.
+ *                     example: preordine convertito
+ *       400:
+ *         description: richiesta malformata.
+ *         content:
+ *           application/json:
+ *             schema:
+ *                 type: object
+ *                 properties:
+ *                   risultato:
+ *                     type: boolean
+ *                     description: risultato operazione.
+ *                     example: false
+ *                   descrizione:
+ *                     type: string
+ *                     description: specifica operazione.
+ *                     example: richiesta malformata
  *       402:
  *         description: saldo insufficiente.
  *         content:
- *           text/plain:
+ *           application/json:
  *             schema:
- *                type: string
- *                description: risultato operazione
- *                example: saldo insufficente
+ *                 type: object
+ *                 properties:
+ *                   risultato:
+ *                     type: boolean
+ *                     description: risultato operazione.
+ *                     example: false
+ *                   messaggio:
+ *                     type: string
+ *                     description: specifica operazione.
+ *                     example: saldo insufficiente
  */
 app.post('/api/preordine/converti', function (req, res) {
-    const preordine = db.prepare("SELECT cliente, totale FROM Ordini WHERE id=?").all(req.body.id)[0].cliente;
+    const preordine = db.prepare("SELECT cliente, totale, tipo FROM Ordini WHERE id=?").all(req.body.id)[0];
     let saldoSuff = true, saldo;
 
-
-    if (req.body.metodoPagamento == 'wallet') {
-        saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(preordine.cliente)[0].saldo;
-        if (saldo >= preordine.totale) {
-            db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(preordine.totale, preordine.cliente);
-        } else {
-            saldoSuff = false;
+    if(preordine && preordine.tipo == 'P' && ['wallet', 'pagopa', 'paypal'].indexOf(req.body.metodoPagamento)!=-1){
+        if (req.body.metodoPagamento == 'wallet') {
+            saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(preordine.cliente)[0].saldo;
+            if (saldo >= preordine.totale) {
+                db.prepare("UPDATE Clienti SET saldo = saldo - ? WHERE email=?").run(preordine.totale, preordine.cliente);
+            } else {
+                saldoSuff = false;
+            }
         }
+
+        if (saldoSuff) {
+            db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
+            res.send({risultato:true, messaggio:"preordine convertito"});
+        } else {
+            res.status(402)
+            res.send({risultato:false, messaggio:"saldo insufficiente"});
+        }
+    }else{
+        res.status(400)
+        res.send({risultato:false, messaggio:"richiesta malformata"});
     }
 
-    if (saldoSuff) {
-        db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
-        res.send("ordine creato");
-    } else {
-        res.status(402)
-        res.send("saldo insufficiente");
-    }
 });
 
 //PRODUTTORE
