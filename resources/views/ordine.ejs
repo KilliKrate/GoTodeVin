@@ -1,36 +1,145 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-
-
-<head>
+  <head>
     <%- include('./partials/head.ejs') %>
-</head>
+  </head>
 
-<body class="d-flex flex-row">
-
+  <body class="d-flex flex-row">
     <%- include('./partials/sidenav.ejs') %>
 
     <div class="p-5 w-100">
-
-
+      <div class="row mb-4">
+        <div class="form-group col">
+          <label for="idOrdine">ID Ordine</label>
+          <input type="text" class="form-control" id="idOrdine" readonly />
+        </div>
+        <div class="form-group col">
+          <label for="statoOrdine">Stato</label>
+          <input type="text" class="form-control" id="statoOrdine" readonly />
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="form-group col">
+          <label for="dataCreazione">Data di Creazione</label>
+          <input type="text" class="form-control" id="dataCreazione" readonly />
+        </div>
+        <div class="form-group col">
+          <label for="metodoPagamento">Metodo di Pagamento</label>
+          <input
+            type="text"
+            class="form-control"
+            id="metodoPagamento"
+            readonly
+          />
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="form-group col">
+          <label for="dataRitirabile">Data di Disponibilità al Ritiro</label>
+          <input
+            type="text"
+            class="form-control"
+            id="dataRitirabile"
+            readonly
+          />
+        </div>
+        <div class="form-group col">
+          <label for="dataRitirato">Data di Ritiro</label>
+          <input type="text" class="form-control" id="dataRitirato" readonly />
+        </div>
+      </div>
+      <div class="row mb-4">
+        <div class="form-group col">
+          <label for="numLocker">Numero Locker</label>
+          <input type="text" class="form-control" id="numLocker" readonly />
+        </div>
+      </div>
+      <div
+        id="noQr"
+        class="jumbotron jumbotron-fluid p-3 dark bg-secondary text-white mb-4"
+      >
+        <div class="container">
+          <h1 class="display-4">QR code non disponibile</h1>
+          <p class="lead">
+            Sarà disponibile appena l'ordine verrà reso disponibile per il
+            ritiro
+          </p>
+        </div>
+      </div>
+      <div id="qrAvailable">
+        <img
+          src="http://localhost:8080/resources/images/qr.png"
+          class="w-200px mx-auto d-block"
+          alt="QR"
+        />
+      </div>
+      <table id="vini" class="display w-100 mt-5">
+        <thead>
+          <tr>
+            <th>Vino</th>
+            <th>Quantità</th>
+          </tr>
+        </thead>
+      </table>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
     <script type="module">
-        import {initUsers} from '/resources/scripts/sidenav.mjs';
-        import {getCookie} from '/resources/scripts/cookie.mjs'
+      import { initUsers } from "/resources/scripts/sidenav.mjs";
+      import { getCookie } from "/resources/scripts/cookie.mjs";
 
-        async function initOrdine() {
-            const response = fetch(`/api/ordini/dettaglio/${window.location.pathname.split('/')[2]}`)
-            .then(response => response.json())
-            .then(data => console.log(data));
-        }
+      async function initOrdine() {
+        const response = fetch(
+          `/api/ordini/dettaglio/${window.location.pathname.split("/")[2]}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            $("label[for='" + $("#idOrdine").attr("id") + "']").text(
+              data.ordine.tipo == "O" ? "ID Ordine" : "ID Preordine"
+            );
+            $("#idOrdine").val(data.ordine.id);
+            $("#statoOrdine").val(data.ordine.stato);
+            $("#dataCreazione").val(data.ordine.data_creazione);
+            $("#metodoPagamento").val(data.ordine.metodoPagamento);
 
-        initOrdine();
-        initUsers();
+            if (data.ordine.tipo == "O") {
+              $("#dataRitirabile").val(
+                data.ordine.data_ritirabile
+                  ? data.ordine.data_ritirabile
+                  : "N/A"
+              );
+              $("#dataRitirato").val(
+                data.ordine.data_ritirato ? data.ordine.data_ritirato : "N/A"
+              );
+
+              if (data.ordine.qr) {
+                $("#noQr").hide();
+              } else {
+                $("#qrAvailable").hide();
+              }
+            } else {
+              $("#dataRitirabile").parent().parent().hide();
+              $("#numLocker").parent().hide();
+              $("#noQr").hide();
+              $("#qrAvailable").hide();
+            }
+            $("#vini").DataTable({
+              data: data.ordine.vini,
+              columns: [
+                {
+                  data: "vino",
+                },
+                {
+                  data: "quantita",
+                },
+              ],
+            });
+          });
+      }
+
+      initOrdine();
+      initUsers();
     </script>
-</body>
-
-
+  </body>
 </html>

@@ -458,12 +458,12 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
     sql = "SELECT * FROM Ordini WHERE id=" + idOrdine + " LIMIT 1";
     let ordine = db.prepare(sql).all()[0];
 
-    if(ordine){
+    if (ordine) {
         ordine.vini = vini;
-        res.send({risultato:true, ordine:ordine});
-    }else{
+        res.send({ risultato: true, ordine: ordine });
+    } else {
         res.status(400);
-        res.send({risultato:false, messaggio:"ordine inesistente"})
+        res.send({ risultato: false, messaggio: "ordine inesistente" })
     }
 });
 
@@ -574,7 +574,7 @@ app.get('/api/carrello/:email', function (req, res) {
 app.post('/api/carrello/modifica', function (req, res) {
     const { body: { quantita, nome, email } } = req, eseguiSql = true;
     let sql, vino = db.prepare("SELECT * FROM Vini WHERE nome=?").all(nome)[0], modifiche;
-    if(vino && quantita>=0){
+    if (vino && quantita >= 0) {
         if (quantita == 0) {
             sql = `DELETE FROM Acquistabili WHERE vino='${nome}' AND cliente = '${email}'`;
         }
@@ -582,21 +582,21 @@ app.post('/api/carrello/modifica', function (req, res) {
             sql = `UPDATE Acquistabili SET quantita='${quantita}' WHERE vino='${nome}' AND cliente = '${email}'`;
         }
         else {
-            res.send({risultato:false, messaggio:"disponibilità insufficiente"});
+            res.send({ risultato: false, messaggio: "disponibilità insufficiente" });
             eseguiSql = false;
         }
         if (eseguiSql) {
             modifiche = db.prepare(sql).run();
-            if(modifiche.changes!=0) res.send({risultato:true, messaggio:"modifica avvenuta"});
-            else{
+            if (modifiche.changes != 0) res.send({ risultato: true, messaggio: "modifica avvenuta" });
+            else {
                 //o era sbagliato l'utente o io non avevo l'acquistabile nel mio carrello
                 res.status(400);
-                res.send({risultato:false, messaggio:"richiesta malformata"});
+                res.send({ risultato: false, messaggio: "richiesta malformata" });
             }
         }
-    }else{
+    } else {
         res.status(400);
-        res.send({risultato:false, messaggio:"richiesta malformata"})
+        res.send({ risultato: false, messaggio: "richiesta malformata" })
     }
 });
 
@@ -708,7 +708,7 @@ app.post('/api/carrello/aggiungi', function (req, res) {
 
     let vino = db.prepare("SELECT * FROM Vini WHERE nome=?").all(nome)[0], utente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
 
-    if(vino && quantita>0 && utente){
+    if (vino && quantita > 0 && utente) {
         vino = db.prepare(`SELECT * FROM Acquistabili WHERE vino='${nome}' AND cliente='${email}'`).all()
         if (vino.length != 0 && verificaDisponibilita(vino[0].quantita + quantita, nome)) {
             sql = `UPDATE Acquistabili SET quantita = ${quantita + vino[0].quantita} WHERE vino = '${nome}' AND cliente = '${email}'`
@@ -726,7 +726,7 @@ app.post('/api/carrello/aggiungi', function (req, res) {
         else {
             res.send({ aggiunto: false, messaggio: "Disponibilità insufficiente!" });
         }
-    }else{
+    } else {
         res.status(400);
         res.send({ aggiunto: false, messaggio: "richiesta malformata" });
     }
@@ -1003,12 +1003,12 @@ app.get('/api/wallet/saldo/:email', function (req, res) {
 app.post('/api/wallet/ricarica', function (req, res) {
     const { body: { email, ricarica } } = req;
     const utente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
-    if(utente && ricarica>0){
+    if (utente && ricarica > 0) {
         console.log(db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(ricarica, email).changes);
-        res.send({risposta:true, messaggio:"ricarica effettuata"});
-    }else{
+        res.send({ risposta: true, messaggio: "ricarica effettuata" });
+    } else {
         res.status(400);
-        res.send({risposta:false, messaggio:"richiesta malformata"})
+        res.send({ risposta: false, messaggio: "richiesta malformata" })
     }
 });
 
@@ -1090,7 +1090,7 @@ app.post('/api/preordine/converti', function (req, res) {
     const preordine = db.prepare("SELECT cliente, totale, tipo FROM Ordini WHERE id=?").all(req.body.id)[0];
     let saldoSuff = true, saldo;
 
-    if(preordine && preordine.tipo == 'P' && ['wallet', 'pagopa', 'paypal'].indexOf(req.body.metodoPagamento)!=-1){
+    if (preordine && preordine.tipo == 'P' && ['wallet', 'pagopa', 'paypal'].indexOf(req.body.metodoPagamento) != -1) {
         if (req.body.metodoPagamento == 'wallet') {
             saldo = db.prepare('SELECT saldo FROM Clienti WHERE email=?').all(preordine.cliente)[0].saldo;
             if (saldo >= preordine.totale) {
@@ -1102,14 +1102,14 @@ app.post('/api/preordine/converti', function (req, res) {
 
         if (saldoSuff) {
             db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
-            res.send({risultato:true, messaggio:"preordine convertito"});
+            res.send({ risultato: true, messaggio: "preordine convertito" });
         } else {
             res.status(402)
-            res.send({risultato:false, messaggio:"saldo insufficiente"});
+            res.send({ risultato: false, messaggio: "saldo insufficiente" });
         }
-    }else{
+    } else {
         res.status(400)
-        res.send({risultato:false, messaggio:"richiesta malformata"});
+        res.send({ risultato: false, messaggio: "richiesta malformata" });
     }
 
 });

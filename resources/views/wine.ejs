@@ -80,7 +80,7 @@
                 },
                 body: JSON.stringify({
                     nome: wine.nome, 
-                    quantita: $('#quantita').val(), 
+                    quantita: Number.parseInt($('#quantita').val()), 
                     email: getCookie('log-in')
                 })
             }).then(response => response.json()).then(data => {
