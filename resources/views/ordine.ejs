@@ -96,24 +96,24 @@
           .then((response) => response.json())
           .then((data) => {
             $("label[for='" + $("#idOrdine").attr("id") + "']").text(
-              data.ordine.tipo == "O" ? "ID Ordine" : "ID Preordine"
+              data.tipo == "O" ? "ID Ordine" : "ID Preordine"
             );
-            $("#idOrdine").val(data.ordine.id);
-            $("#statoOrdine").val(data.ordine.stato);
-            $("#dataCreazione").val(data.ordine.data_creazione);
-            $("#metodoPagamento").val(data.ordine.metodoPagamento);
+            $("#idOrdine").val(data.id);
+            $("#statoOrdine").val(data.stato);
+            $("#dataCreazione").val(data.data_creazione);
+            $("#metodoPagamento").val(data.metodoPagamento);
 
-            if (data.ordine.tipo == "O") {
+            if (data.tipo == "O") {
               $("#dataRitirabile").val(
-                data.ordine.data_ritirabile
-                  ? data.ordine.data_ritirabile
+                data.data_ritirabile
+                  ? data.data_ritirabile
                   : "N/A"
               );
               $("#dataRitirato").val(
-                data.ordine.data_ritirato ? data.ordine.data_ritirato : "N/A"
+                data.data_ritirato ? data.data_ritirato : "N/A"
               );
 
-              if (data.ordine.qr) {
+              if (data.qr) {
                 $("#noQr").hide();
               } else {
                 $("#qrAvailable").hide();
@@ -125,7 +125,7 @@
               $("#qrAvailable").hide();
             }
             $("#vini").DataTable({
-              data: data.ordine.vini,
+              data: data.vini,
               columns: [
                 {
                   data: "vino",

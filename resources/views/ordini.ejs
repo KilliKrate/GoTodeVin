@@ -40,7 +40,7 @@
           `http://localhost:8080/api/ordini/${getCookie("log-in")}`
         )
           .then((response) => response.json())
-          .then((data) =>
+          .then((data) => {
             data.forEach((element) => {
               element.tipo = element.tipo == "O" ? "Ordine" : "Preordine";
               element.data_creazione = element.data_creazione.slice(
@@ -48,9 +48,9 @@
                 element.data_creazione.lastIndexOf(":")
               );
               element.totale = `€ ${element.totale.toFixed(2)}`;
-              ordini = data;
             })
-          );
+            ordini = data;
+          });
 
         console.log(ordini);
 
