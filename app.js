@@ -88,11 +88,6 @@ app.get('/:name', (req, res) => {
 
 /* APIs */
 
-//todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
-//todo: NON funziona scadenza FATTO?
-//todo: se da ritirare come aggiornamento verifica esistano qr e locker in generale controlli
-// se meto da ritirare deve essere in lavorazione stesso per ritirato
-
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0];
     return (disp && disp.disponibilita >= quantita);
@@ -1492,13 +1487,23 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
     if(ordine && ordine.tipo == "O"){
         switch (stato) {
             case "daRitirare":
-                modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
-                res.send("ordine modificato");
+                if(req.body.qr && req.body.locker && req.body.locker>0 && ordine.stato == "inLavorazione"){
+                    modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
+                    res.send("ordine modificato");
+                }else{
+                    res.status(400);
+                    res.send("dati necessari non specificati o ordine non in lavorazione")
+                }
                 break;
 
             case "evaso":
-                modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
-                res.send("ordine modificato");
+                if(ordine.stato = "daRitirare"){
+                    modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
+                    res.send("ordine modificato");
+                }else{
+                    res.status(400);
+                    res.send("l'ordine non è in ritiro")
+                }
                 break;
 
             default:
