@@ -89,9 +89,9 @@ app.get('/:name', (req, res) => {
 /* APIs */
 
 //todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
-//todo: aggiungi nel DB ad acquistabili il loro totale come anche a Vino_Ordine così da avere il sub totale in ordine e il totale nel carrello
-//todo: NON funziona scadenza
-//todo: se da ritirare come aggiornamento verifica esistano qr e locker
+//todo: NON funziona scadenza FATTO?
+//todo: se da ritirare come aggiornamento verifica esistano qr e locker in generale controlli
+// se meto da ritirare deve essere in lavorazione stesso per ritirato
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0];
@@ -363,10 +363,11 @@ app.get('/api/ordini/:email', function (req, res) {
         ordini.forEach((elem) => {
             dateParts = elem.data_creazione.replace(' ', 'T') + 'Z';
             d = new Date(dateParts);
+
             if (elem.tipo == 'P' && Math.abs(dataPresente - d) > 21600000) {
                 db.prepare("DELETE FROM Ordini WHERE id=?").run(elem.id);
 
-                let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=?").all(elem.id);
+                let vini = db.prepare("SELECT * FROM Ordini_Vini WHERE ordine=?").all(elem.id);
                 vini.forEach((elem) => {
                     db.prepare("UPDATE Vini SET disponibilita=disponibilita+? WHERE nome=?").run(elem.quantita, elem.vino);
                 });
@@ -375,10 +376,10 @@ app.get('/api/ordini/:email', function (req, res) {
             }
 
             if (elem.data_ritirabile != null) {
-                dateParts = elem.data_ritirabile.split(/[- :]/);
-                d = new Date(dateParts[0], dateParts[1], dateParts[2], dateParts[3], dateParts[4], dateParts[5]);
+                dateParts = elem.data_ritirabile.replace(' ', 'T') + 'Z';
+                d = new Date(dateParts);
                 if (elem.tipo == 'O' && dataPresente - d > 300000 && elem.stato == "daRitirare") {
-                    let vini = db.prepare("SELECT FROM Ordini_Vini WHERE ordine=?").all(elem.id);
+                    let vini = db.prepare("SELECT * FROM Ordini_Vini WHERE ordine=?").all(elem.id);
                     vini.forEach((elem) => {
                         db.prepare("UPDATE Vini SET disponibilita=disponibilita+? WHERE nome=?").run(elem.quantita, elem.vino);
                     });
