@@ -17,7 +17,7 @@ app.set('view engine', 'ejs');
 app.set("views", "resources/views");
 
 /* SWAGGER */
-//TODO: Aggiungere rimborso su wallet quando un'ordine scade
+
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const swaggerOptions = {
@@ -56,14 +56,10 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 
 //todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
 //todo: carrello saldo non disponibilie
-//todo: visualizzazione saldo sul sidenav
-//todo: totale e sub-totale carrello e ordine
-// su prezzo ti ho passato direttamente la moltiplicazione in carrello e ti passo anche un campo
-// totale oltre all'array degli elem quindi hai tutti i dati
-// uguale per ordine però lì ho chiamato il prezzo della singola riga subtotale
-// da implementare dovrebbe mancare solo il totale del carrello e dell'ordine
-// il subtotale nell'ordine lo stampo senza il simbolo euro alla fine decidi te se modificarlo
-// todo: i bottoni di test nell'ordine sono cliccabili quando l'ordine è scaduto
+//todo: i bottoni di test nell'ordine sono cliccabili quando l'ordine è scaduto
+//todo: se un cliente ordina tutti i vini disponibili ma un altro cliente aveva quel vino nel carrello giustamente quando prova ad acquistare non avviene l'acquisto ma non è nemmeno mostrato
+//      il messaggio che invio in cui specifico i vini non disponibili
+//todo: quando modifico la quantità in carrello se non avviene secondo me andrebbe mostrato un errore di qualche tipo o sembra che semplicemente non abbia preso l'input
 
 app.get('/', (req, res) => {
     res.render('index')
@@ -643,7 +639,8 @@ app.get('/api/carrello/:email', function (req, res) {
  *                   example: richiesta malformata
  */
 app.post('/api/carrello/modifica', function (req, res) {
-    const { body: { quantita, nome, email } } = req, eseguiSql = true;
+    const { body: { quantita, nome, email } } = req;
+    let eseguiSql = true;
     let sql, vino = db.prepare("SELECT * FROM Vini WHERE nome=?").all(nome)[0], modifiche;
     if (vino && quantita >= 0) {
         if (quantita == 0) {
