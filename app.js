@@ -84,6 +84,10 @@ app.get('/assistenza', (req, res) => {
     res.render('assistenza');
 });
 
+app.get('/ricarica', (req, res) => {
+    res.render('ricarica');
+});
+
 app.get('/:name', (req, res) => {
     res.render('wine');
 });
@@ -97,7 +101,7 @@ function verificaDisponibilita(quantita, nome) {
 
 function calcolaPrezzo(quantita, vino) {
     let wine = db.prepare(`SELECT prezzo FROM Vini WHERE nome=?`).all(vino)[0];
-    return(wine.prezzo*quantita);
+    return (wine.prezzo * quantita);
 }
 
 //CATALOGO
@@ -246,9 +250,9 @@ app.get('/api/catalogo/ricerca/:nome&:annata', function (req, res) {
 app.get('/api/catalogo/dettaglio/:name', function (req, res) {
     const sql = `SELECT * FROM Vini WHERE nome = '${req.params.name}'`;
     const wine = db.prepare(sql).all()[0];
-    if(wine){
+    if (wine) {
         res.send(wine);
-    }else{
+    } else {
         res.status(404);
         res.send("vino non trovato")
     }
@@ -356,7 +360,7 @@ app.get('/api/ordini/:email', function (req, res) {
     let dateParts, d;
     const cliente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(req.params.email)[0];
 
-    if(cliente){
+    if (cliente) {
         ordini.forEach((elem) => {
             dateParts = elem.data_creazione.replace(' ', 'T') + 'Z';
             d = new Date(dateParts);
@@ -387,7 +391,7 @@ app.get('/api/ordini/:email', function (req, res) {
 
         ordini = db.prepare(sql).all();
         res.send(ordini);
-    }else{
+    } else {
         res.status(404);
         res.send("utente non registrato");
     }
@@ -483,7 +487,7 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
     const idOrdine = req.params.id;
     let sql = "SELECT vino,quantita FROM Ordini_Vini WHERE ordine=" + idOrdine;
     const vini = db.prepare(sql).all();
-    vini.forEach((elem)=>{
+    vini.forEach((elem) => {
         elem.subtotale = calcolaPrezzo(elem.quantita, elem.vino)
     });
 
@@ -557,19 +561,19 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  */
 app.get('/api/carrello/:email', function (req, res) {
     const cliente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(req.params.email)[0];
-    let total=0, carrello, subtotale;
-    if(cliente){
+    let total = 0, carrello, subtotale;
+    if (cliente) {
         const sql = `SELECT vino, quantita FROM Acquistabili
                     WHERE cliente ='${req.params.email}'`;
         carrello = db.prepare(sql).all();
-        carrello.forEach((elem)=>{
+        carrello.forEach((elem) => {
             subtotale = calcolaPrezzo(elem.quantita, elem.vino);
             elem.prezzo = subtotale;
             total += subtotale;
         });
 
-        res.send({totale:total, elementi: carrello});
-    }else{
+        res.send({ totale: total, elementi: carrello });
+    } else {
         res.status(404);
         res.send("utente non registrato");
     }
@@ -711,9 +715,9 @@ app.delete('/api/carrello/modifica', function (req, res) {
     const { body: { nome, email } } = req;
     const sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${email}'`;
     const modifiche = db.prepare(sql).run();
-    if(modifiche.changes>0){
+    if (modifiche.changes > 0) {
         res.send("eliminato");
-    }else{
+    } else {
         res.status(400);
         res.send("vino non presente nel carrello")
     }
@@ -942,6 +946,11 @@ app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
  *                     type: string
  *                     description: email dell'utente.
  *                     example: Pluto@GoToDeMail.com
+ *                   saldo:
+ *                     type: float
+ *                     description: saldo dell'utente.
+ *                     example: 420.69
+ * 
  */
 app.get('/api/utenti/', function (req, res) {
     res.send(db.prepare(`SELECT email, name FROM Clienti`).all());
@@ -990,10 +999,10 @@ app.get('/api/utenti/', function (req, res) {
  *                example: utente non registrato
  */
 app.get('/api/utenti/:email', function (req, res) {
-    const utente = db.prepare(`SELECT email, name FROM Clienti WHERE email='${req.params.email}'`).all()[0];
-    if(utente){
+    const utente = db.prepare(`SELECT email, name, saldo FROM Clienti WHERE email='${req.params.email}'`).all()[0];
+    if (utente) {
         res.send(utente);
-    }else{
+    } else {
         res.status(404);
         res.send("utente non registrato")
     }
@@ -1039,9 +1048,9 @@ app.get('/api/utenti/:email', function (req, res) {
  */
 app.get('/api/wallet/saldo/:email', function (req, res) {
     const saldo = db.prepare(`SELECT saldo FROM Clienti WHERE email='${req.params.email}'`).all()[0];
-    if(saldo){
+    if (saldo) {
         res.send(saldo);
-    }else{
+    } else {
         res.status(404);
         res.send("email non registrata")
     }
@@ -1347,9 +1356,9 @@ app.post('/api/gestionale/giacenza', function (req, res) {
 
     if (quantita >= -1) { //-1 sta per prodotto non più rifornito
         modifiche = db.prepare(`UPDATE Vini SET disponibilita = ${quantita} WHERE nome='${nomeVino}'`).run();
-        if(modifiche.changes>0){
+        if (modifiche.changes > 0) {
             res.send("vino specificato modificato")
-        }else{
+        } else {
             res.status(400);
             res.send("il vino che si vuole modificare non esiste")
         }
@@ -1417,10 +1426,10 @@ app.post('/api/gestionale/creaVino', function (req, res) {
     const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req;
 
     if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0) {
-        try{
+        try {
             db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino, annata, descrizione, disponibilita, prezzo);
             res.send("vino inserito");
-        }catch(e){
+        } catch (e) {
             res.status(400);
             res.send("vino già presente");
         }
@@ -1486,23 +1495,23 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
     let modifiche;
     const ordine = db.prepare("SELECT * FROM Ordini WHERE id=?").all(idOrdine)[0];
 
-    if(ordine && ordine.tipo == "O"){
+    if (ordine && ordine.tipo == "O") {
         switch (stato) {
             case "daRitirare":
-                if(req.body.qr && req.body.locker && req.body.locker>0 && ordine.stato == "inLavorazione"){
+                if (req.body.qr && req.body.locker && req.body.locker > 0 && ordine.stato == "inLavorazione") {
                     modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirabile=?, qr=?, locker=? WHERE id=?").run(stato, data, req.body.qr, req.body.locker, idOrdine);
                     res.send("ordine modificato");
-                }else{
+                } else {
                     res.status(400);
                     res.send("dati necessari non specificati o ordine non in lavorazione")
                 }
                 break;
 
             case "evaso":
-                if(ordine.stato = "daRitirare"){
+                if (ordine.stato = "daRitirare") {
                     modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
                     res.send("ordine modificato");
-                }else{
+                } else {
                     res.status(400);
                     res.send("l'ordine non è in ritiro")
                 }
@@ -1512,7 +1521,7 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
                 res.status(400);
                 res.send("richiesta malformata")
         }
-    }else{
+    } else {
         res.status(400);
         res.send("ordine inesistente")
     }

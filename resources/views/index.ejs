@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="it">
-
-<head>
+  <head>
     <%- include('./partials/head.ejs') %>
     <title>Catalogo Vini</title>
-</head>
+  </head>
 
-<body class="d-flex flex-row">
+  <body class="d-flex flex-row">
     <%- include('./partials/sidenav.ejs') %>
 
     <div class="p-5 w-100">
-        <table id="catalogo" class="display w-100 mt-3">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Annata</th>
-                    <th>Prezzo</th>
-                </tr>
-            </thead>
-        </table>
+      <table id="catalogo" class="display w-100 mt-3">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Annata</th>
+            <th>Prezzo (€)</th>
+          </tr>
+        </thead>
+      </table>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
     <script type="module">
-        import {initUsers} from '/resources/scripts/sidenav.mjs';
+      import { initUsers } from "/resources/scripts/sidenav.mjs";
 
-        async function initTable() {
-            const response = await fetch("http://localhost:8080/api/catalogo/vini")
-            .then(response => response.json())
-            .then(data => {
-                $("#catalogo").DataTable({
-                    data,
-                    columns: [{
-                        data: "nome",
-                    }, {
-                        data: "annata",
-                    }, {
-                        data: "prezzo",
-                    }, ],
-                    "createdRow": function (row, data, dataIndex) {
-                        $(row).addClass("clickable");
-                    }
-                });
-                
-                $("#catalogo").on("click", "tbody tr", function () {
-                    window.location.href = encodeURIComponent(this.firstElementChild.textContent.trim());
-                });
+      async function initTable() {
+        const response = await fetch("http://localhost:8080/api/catalogo/vini")
+          .then((response) => response.json())
+          .then((data) => {
+            $("#catalogo").DataTable({
+              data,
+              columns: [
+                {
+                  data: "nome",
+                },
+                {
+                  data: "annata",
+                },
+                {
+                  data: "prezzo",
+                },
+              ],
+              createdRow: function (row, data, dataIndex) {
+                $(row).addClass("clickable");
+              },
             });
-        }
 
-        initUsers();
-        initTable();
+            $("#catalogo").on("click", "tbody tr", function () {
+              window.location.href = encodeURIComponent(
+                this.firstElementChild.textContent.trim()
+              );
+            });
+          });
+      }
+
+      initUsers();
+      initTable();
     </script>
-</body>
-
+  </body>
 </html>

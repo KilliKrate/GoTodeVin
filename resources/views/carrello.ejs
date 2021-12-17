@@ -1,167 +1,224 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
-
-<head>
+  <head>
     <%- include('./partials/head.ejs') %>
     <title>Carrello</title>
-</head>
+  </head>
 
-<body class="d-flex flex-row">
-
+  <body class="d-flex flex-row">
     <%- include('./partials/sidenav.ejs') %>
 
     <div class="p-5 w-100">
-        <h1 class="mb-5">Carrello</h1>
+      <h1 class="mb-5">Carrello</h1>
 
-        <div id="items" class="mb-5">
-            <div id="empty-cart" class="jumbotron jumbotron-fluid p-3 dark bg-secondary text-white">
-                <div class="container">
-                    <h1 class="display-4">Carrello vuoto!</h1>
-                    <p class="lead">Compra qualche vino per riempirlo</p>
-                </div>
-            </div>
+      <div id="items" class="mb-5">
+        <div
+          id="empty-cart"
+          class="jumbotron jumbotron-fluid p-3 dark bg-secondary text-white"
+        >
+          <div class="container">
+            <h1 class="display-4">Carrello vuoto!</h1>
+            <p class="lead">Compra qualche vino per riempirlo</p>
+          </div>
         </div>
+      </div>
 
-        <div class="d-flex w-100 justify-content-end" id="buttons">
-            <button id="buyBtn" type="button" class="btn btn-primary me-5" data-bs-toggle="modal"
-                data-bs-target="#ordinaVino">Compra</button>
-            <button id="preorderBtn" type="button" class="btn btn-secondary" data-bs-toggle="modal"
-                data-bs-target="#ordinaVino">Preordina</button>
+      <div
+        class="d-flex w-100 justify-content-between align-items-center"
+        id="buttons"
+      >
+        <p class="mb-0 lead"><strong id="totaleCarrello"></strong></p>
+        <div>
+          <button
+            id="buyBtn"
+            type="button"
+            class="btn btn-primary me-5"
+            data-bs-toggle="modal"
+            data-bs-target="#ordinaVino"
+          >
+            Compra
+          </button>
+          <button
+            id="preorderBtn"
+            type="button"
+            class="btn btn-secondary"
+            data-bs-toggle="modal"
+            data-bs-target="#ordinaVino"
+          >
+            Preordina
+          </button>
         </div>
-
+      </div>
     </div>
 
     <div class="modal fade" id="ordinaVino" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Modal title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="paymentForm">
-                    <div class="modal-body">
-                        <input type="text" name="type" hidden id="op-type">
-                        <input type="radio" class="btn-check" name="payment" id="wallet" autocomplete="off" checked>
-                        <label class="btn btn-outline-primary" for="wallet">Wallet</label>
-                        <input type="radio" class="btn-check" name="payment" id="paypal" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="paypal">PayPal</label>
-                        <input type="radio" class="btn-check" name="payment" id="pagopa" autocomplete="off">
-                        <label class="btn btn-outline-primary" for="pagopa">PagoPA</label>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary" id="modalSubmit">Save changes</button>
-                    </div>
-                </form>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Modal title</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <form id="paymentForm">
+            <div class="modal-body">
+              <input type="text" name="type" hidden id="op-type" />
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="wallet"
+                autocomplete="off"
+                checked
+              />
+              <label class="btn btn-outline-primary" for="wallet">Wallet</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="paypal"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-primary" for="paypal">PayPal</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="pagopa"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-primary" for="pagopa">PagoPA</label>
             </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="submit" class="btn btn-primary" id="modalSubmit">
+                Save changes
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
 
-</body>
+    <script type="module">
+      import { initUsers } from "/resources/scripts/sidenav.mjs";
+      import { getCookie } from "/resources/scripts/cookie.mjs";
 
-<script type="module">
-    import {initUsers} from '/resources/scripts/sidenav.mjs';
-    import {getCookie} from '/resources/scripts/cookie.mjs';
+      let carrello;
 
-    let carrello;
-
-    async function initCart() {
-        if (!getCookie('log-in')) {
-            alert("Log-in first!")
-            return;
+      async function initCart() {
+        if (!getCookie("log-in")) {
+          alert("Log-in first!");
+          return;
         }
 
-        const response = await fetch(`/api/carrello/${getCookie('log-in')}`)
-        .then(response => response.json())
-        .then(data => {
+        const response = await fetch(`/api/carrello/${getCookie("log-in")}`)
+          .then((response) => response.json())
+          .then((data) => {
+            $("#totaleCarrello").text(`Totale: ${data.totale}€`);
             carrello = data.elementi;
             carrello.forEach((element, index) => {
-                $('#items').append(
-                    `<div class="d-flex justify-content-between mb-3 align-items-center shadow bg-white rounded">
-                        <img src="/resources/images/wine.jpg" class="img-thumbnail cart-img img-contain">
-                        <div class="row w-100 px-5">
-                            <div class="col-sm-5 text-center">
-                                <p>${element.vino}</p>    
+              $("#items").append(
+                `<div class="d-flex justify-content-between mb-3 align-items-center shadow bg-white rounded">
+                            <img src="/resources/images/wine.jpg" class="img-thumbnail cart-img img-contain">
+                            <div class="row w-100 px-5">
+                                <div class="col-sm-5 text-center">
+                                    <p>${element.vino}</p>    
+                                </div>
+                                
+                                <p class="col-sm-3">€ ${element.prezzo.toFixed(
+                                  2
+                                )}</p>
+                                <div class="w-150px col-sm-4">
+                                    <input type="number" class="form-control" id="quantita" placeholder="Quantità" value="${
+                                      element.quantita
+                                    }">
+                                </div>
                             </div>
-                            
-                            <p class="col-sm-3">€ ${element.prezzo}</p>
-                            <div class="w-150px col-sm-4">
-                                <input type="number" class="form-control" id="quantita" placeholder="Quantità" value="${element.quantita}">
-                            </div>
-                        </div>
-                        <a href="#" data-index="${index}" class="delete-btn pe-5">
-                            <i class="fas fa-trash-alt fa-lg"></i>
-                        </a>
-                    </div>`
-                );
+                            <a href="#" data-index="${index}" class="delete-btn pe-5">
+                                <i class="fas fa-trash-alt fa-lg"></i>
+                            </a>
+                        </div>`
+              );
             });
 
-            $('.delete-btn').click(function() {
-                deleteItem($(this).data('index'));
+            $(".delete-btn").click(function () {
+              deleteItem($(this).data("index"));
             });
 
-            $('#preorderBtn').click(function() {
-                $('#modalTitle').text('Preordina Carrello')
-                $('#modalSubmit').text('Preordina')
-                $('#op-type').val('P')
+            $("#preorderBtn").click(function () {
+              $("#modalTitle").text("Preordina Carrello");
+              $("#modalSubmit").text("Preordina");
+              $("#op-type").val("P");
             });
 
-            $('#buyBtn').click(function() {
-                $('#modalTitle').text('Acquista Vini')
-                $('#modalSubmit').text('Acquista')
-                $('#op-type').val('O')                
+            $("#buyBtn").click(function () {
+              $("#modalTitle").text("Acquista Vini");
+              $("#modalSubmit").text("Acquista");
+              $("#op-type").val("O");
             });
 
-            $('#paymentForm').submit(function(e) {
-                submitPayment($('input[name="payment"]:checked').attr('id'), $('#op-type').val());
-                return false;
+            $("#paymentForm").submit(function (e) {
+              submitPayment(
+                $('input[name="payment"]:checked').attr("id"),
+                $("#op-type").val()
+              );
+              return false;
             });
-        })
-    }
+          });
+      }
 
-    async function deleteItem(index) {
+      async function deleteItem(index) {
         const response = await fetch(`/api/carrello/modifica`, {
-                method: 'POST',
-                headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    nome: carrello[index].vino, 
-                    quantita: 0, 
-                    email: getCookie('log-in')
-                })
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nome: carrello[index].vino,
+            quantita: 0,
+            email: getCookie("log-in"),
+          }),
         });
 
         location.reload();
-    }
+      }
 
-    async function submitPayment(paymentType, orderType) {
+      async function submitPayment(paymentType, orderType) {
         const response = await fetch(`/api/carrello/pre-ordina`, {
-                method: 'POST',
-                headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    email: getCookie('log-in'),
-                    metodoPagamento: paymentType,
-                    tipo: orderType
-                })
-        }).then(response => console.log(response));
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: getCookie("log-in"),
+            metodoPagamento: paymentType,
+            tipo: orderType,
+          }),
+        }).then((response) => console.log(response));
         location.reload();
-    }
+      }
 
-    await initUsers();
-    await initCart();
-    
-    if(carrello == undefined || !carrello.length) {
-        $('#buttons').remove();
-    } else {
-        $('#empty-cart').remove();
-    }
-</script>
+      await initUsers();
+      await initCart();
 
+      if (carrello == undefined || !carrello.length) {
+        $("#buttons").remove();
+      } else {
+        $("#empty-cart").remove();
+      }
+    </script>
+  </body>
 </html>

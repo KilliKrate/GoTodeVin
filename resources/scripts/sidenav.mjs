@@ -20,7 +20,8 @@ export async function initUsers() {
     if (getCookie('log-in')) {
         response = await fetch(`http://localhost:8080/api/utenti/${getCookie('log-in')}`)
         res = await response.json();
-
+        $('#saldoDiv').removeClass('d-none')
+        $('#saldo').text(`${res.saldo}€`)
         $('.dropdown-toggle').html(res.name);
     }
 }

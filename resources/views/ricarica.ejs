@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <%- include('./partials/head.ejs') %>
+    <title>Ricarica Wallet</title>
+  </head>
+
+  <body class="d-flex flex-row">
+    <%- include('./partials/sidenav.ejs') %>
+
+    <div class="p-5 w-100">
+      <h1>Ricarica Wallet</h1>
+
+      <form id="form">
+        <div class="row mb-4 mt-3">
+          <div class="form-group col">
+            <label for="importo">Importo (€)</label>
+            <select class="form-control" id="importo">
+              <option>5</option>
+              <option>10</option>
+              <option>25</option>
+              <option>50</option>
+              <option>100</option>
+              <option>250</option>
+              <option>500</option>
+            </select>
+          </div>
+          <div class="form-group col">
+            <label for="metodoPagamento">Stato</label>
+            <select class="form-control" id="metodoPagamento">
+              <option>paypal</option>
+              <option>pagopa</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit">Ricarica</button>
+      </form>
+    </div>
+
+    <%- include('./partials/bottom_scripts.ejs') %>
+
+    <script type="module">
+      import { initUsers } from "/resources/scripts/sidenav.mjs";
+      import { getCookie } from "/resources/scripts/cookie.mjs";
+
+      async function initRicarica() {
+        if (!getCookie("log-in")) {
+          alert("Log-in first!");
+        }
+
+        $("#form").submit(async function (e) {
+          const response = await fetch(`/api/wallet/ricarica`, {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: getCookie("log-in"),
+              ricarica: $("#importo").val(),
+            }),
+          });
+          return false;
+        });
+      }
+
+      initUsers();
+      initRicarica();
+    </script>
+  </body>
+</html>

@@ -78,7 +78,7 @@
           <tr>
             <th>Vino</th>
             <th>Quantità</th>
-            <th>€ Sub-totale</th>
+            <th>Sub-totale (€)</th>
           </tr>
         </thead>
       </table>
@@ -106,17 +106,13 @@
 
             if (data.tipo == "O") {
               $("#dataRitirabile").val(
-                data.data_ritirabile
-                  ? data.data_ritirabile
-                  : "N/A"
+                data.data_ritirabile ? data.data_ritirabile : "N/A"
               );
               $("#dataRitirato").val(
                 data.data_ritirato ? data.data_ritirato : "N/A"
               );
 
-              $("#numLocker").val(
-                data.locker ? data.locker : "-"
-              );
+              $("#numLocker").val(data.locker ? data.locker : "-");
 
               if (data.qr) {
                 $("#noQr").hide();

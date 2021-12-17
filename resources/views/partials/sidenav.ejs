@@ -1,39 +1,64 @@
-<div class="d-flex flex-column flex-shrink-0 bg-light vh-100 position-fixed" style="width: 100px;">
-    <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
-        <li class="nav-item">
-            <a href="/" class="nav-link py-3 border-bottom">
-                <i class="fa fa-list"></i>
-                <small> Catalogo</small>
-            </a>
-        </li>
-        <li>
-            <a href="/carrello" class="nav-link py-3 border-bottom">
-                <i class="fa fa-shopping-cart"></i>
-                <small>Carrello</small>
-            </a>
-        </li>
-        <li>
-            <a href="/ordini" class="nav-link py-3 border-bottom">
-                <i class="fa fa-wine-bottle"></i>
-                <small>Ordini</small>
-            </a>
-        </li>
-        <li>
-            <a href="/assistenza" class="nav-link py-3 border-bottom">
-                <i class="fa fa-phone-alt"></i>
-                <small>Assistenza</small>
-            </a>
-        </li>
-    </ul>
-    <div class="dropdown border-top">
-        <a href="#"
-            class="d-flex align-items-center justify-content-center p-3 link-dark text-decoration-none dropdown-toggle"
-            id="dropdownUser3" data-bs-toggle="dropdown" aria-expanded="false">
-            <img src="http://localhost:8080/resources/images/user.jpg" width="36" height="36" class="rounded-circle">
-        </a>
-        <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser3">
-        </ul>
-    </div>
+<div
+  class="d-flex flex-column flex-shrink-0 bg-light vh-100 position-fixed"
+  style="width: 100px"
+>
+  <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+    <li class="nav-item">
+      <a href="/" class="nav-link py-3 border-bottom">
+        <i class="fa fa-list"></i>
+        <small> Catalogo</small>
+      </a>
+    </li>
+    <li>
+      <a href="/carrello" class="nav-link py-3 border-bottom">
+        <i class="fa fa-shopping-cart"></i>
+        <small>Carrello</small>
+      </a>
+    </li>
+    <li>
+      <a href="/ordini" class="nav-link py-3 border-bottom">
+        <i class="fa fa-wine-bottle"></i>
+        <small>Ordini</small>
+      </a>
+    </li>
+    <li>
+      <a href="/assistenza" class="nav-link py-3 border-bottom">
+        <i class="fa fa-phone-alt"></i>
+        <small>Assistenza</small>
+      </a>
+    </li>
+  </ul>
+  <div
+    id="saldoDiv"
+    class="d-flex align-items-center justify-content-center d-none"
+  >
+    <p class="mb-0 me-3" id="saldo"></p>
+    <a href="/ricarica"><i class="fas fa-plus"></i></a>
+  </div>
+  <div class="dropdown border-top">
+    <a
+      href="#"
+      class="
+        d-flex
+        align-items-center
+        justify-content-center
+        p-3
+        link-dark
+        text-decoration-none
+        dropdown-toggle
+      "
+      id="dropdownUser3"
+      data-bs-toggle="dropdown"
+    >
+      <img
+        src="http://localhost:8080/resources/images/user.jpg"
+        width="36"
+        height="36"
+        class="rounded-circle"
+      />
+    </a>
+    <ul class="dropdown-menu text-small shadow"></ul>
+  </div>
 </div>
 
-<div class="flex-shrink-0" style="width: 100px;"></div>
+<div class="flex-shrink-0" style="width: 100px"></div>
