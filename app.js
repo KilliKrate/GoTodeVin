@@ -60,6 +60,12 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 //todo: se un cliente ordina tutti i vini disponibili ma un altro cliente aveva quel vino nel carrello giustamente quando prova ad acquistare non avviene l'acquisto ma non è nemmeno mostrato
 //      il messaggio che invio in cui specifico i vini non disponibili
 //todo: quando modifico la quantità in carrello se non avviene secondo me andrebbe mostrato un errore di qualche tipo o sembra che semplicemente non abbia preso l'input
+//todo: ordine scaduto non dovrebbero avere il qr
+
+//todo: aggiungere check su DB nel saldo di un cliente per >=0
+//todo: aggiungere check su DB nella password che deve essere almeno 8 caratteri così da fare i fighi e riferirsi al RF nel documento
+//      quindi length(password) >= 8
+//todo: check su disponibilità va moficiato perchè il valore -1 venga accettato (usato per identificare vino non più rifornito)
 
 app.get('/', (req, res) => {
     res.render('index')
@@ -866,7 +872,7 @@ app.post('/api/carrello/aggiungi', function (req, res) {
  *                description: risultato operazione
  *                example: saldo insufficente
  */
-app.post('/api/carrello/pre-ordina', function (req, res) { // DA FINIRE
+app.post('/api/carrello/pre-ordina', function (req, res) {
     const { body: { email, tipo, metodoPagamento } } = req;
     let aggiungiPreordine = true, viniMancanti = "I seguenti vini non sono disponibili:", totale = 0, saldoSuff = true;
 
@@ -956,7 +962,6 @@ app.get('/api/utenti/', function (req, res) {
     res.send(db.prepare(`SELECT email, name FROM Clienti`).all());
 })
 
-//NON BASTEREBBE INVIARE IL NOME?
 /**
  * @swagger
  * /api/utenti/{email}:
