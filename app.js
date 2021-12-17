@@ -17,7 +17,7 @@ app.set('view engine', 'ejs');
 app.set("views", "resources/views");
 
 /* SWAGGER */
-
+//TODO: Aggiungere rimborso su wallet quando un'ordine scade
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const swaggerOptions = {
