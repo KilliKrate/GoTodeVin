@@ -78,6 +78,7 @@
           <tr>
             <th>Vino</th>
             <th>Quantità</th>
+            <th>€ Sub-totale</th>
           </tr>
         </thead>
       </table>
@@ -113,6 +114,10 @@
                 data.data_ritirato ? data.data_ritirato : "N/A"
               );
 
+              $("#numLocker").val(
+                data.locker ? data.locker : "-"
+              );
+
               if (data.qr) {
                 $("#noQr").hide();
               } else {
@@ -132,6 +137,9 @@
                 },
                 {
                   data: "quantita",
+                },
+                {
+                  data: "subtotale",
                 },
               ],
             });

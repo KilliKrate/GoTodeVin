@@ -57,8 +57,12 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 //todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
 //todo: carrello saldo non disponibilie
 //todo: visualizzazione saldo sul sidenav
-//todo: la pagina degli ordini non controlla nemmeno il booleano inviato e mostra la pagina anche per un ordine inesistente
 //todo: totale e sub-totale carrello e ordine
+// su prezzo ti ho passato direttamente la moltiplicazione in carrello e ti passo anche un campo
+// totale oltre all'array degli elem quindi hai tutti i dati
+// uguale per ordine però lì ho chiamato il prezzo della singola riga subtotale
+// da implementare dovrebbe mancare solo il totale del carrello e dell'ordine
+// il subtotale nell'ordine lo stampo senza il simbolo euro alla fine decidi te se modificarlo
 
 app.get('/', (req, res) => {
     res.render('index')
@@ -87,7 +91,7 @@ app.get('/:name', (req, res) => {
 //todo: nell'eliminazione l'assenza di controlli fa nulla però metterei alla fine che se ho modificato 0 righe allore mando un codice di errore? CHIEDI
 //todo: aggiungi nel DB ad acquistabili il loro totale come anche a Vino_Ordine così da avere il sub totale in ordine e il totale nel carrello
 //todo: NON funziona scadenza
-
+//todo: se da ritirare come aggiornamento verifica esistano qr e locker
 
 function verificaDisponibilita(quantita, nome) {
     let disp = db.prepare(`SELECT disponibilita FROM Vini WHERE nome=?`).all(nome)[0];
@@ -435,6 +439,10 @@ app.get('/api/ordini/:email', function (req, res) {
  *                         type: string
  *                         description: stato dell'ordine che identifica in che fase della sua vita si trova.
  *                         example: inLavorazione
+ *                       totale:
+ *                         type: float
+ *                         description: prezzo totale ordine.
+ *                         example: 375.6
  *                       data_creazione:
  *                         type: string
  *                         description: data creazione.
@@ -460,6 +468,10 @@ app.get('/api/ordini/:email', function (req, res) {
  *                               type: integer
  *                               description: quantità in carrello.
  *                               example: 15
+ *                             subtotale:
+ *                               type: float
+ *                               description: prezzo di quella quantità di quel vino.
+ *                               example: 150.3
  *       404:
  *         description: ordine non trovato.
  *         content:
@@ -473,6 +485,9 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
     const idOrdine = req.params.id;
     let sql = "SELECT vino,quantita FROM Ordini_Vini WHERE ordine=" + idOrdine;
     const vini = db.prepare(sql).all();
+    vini.forEach((elem)=>{
+        elem.subtotale = calcolaPrezzo(elem.quantita, elem.vino)
+    });
 
     sql = "SELECT * FROM Ordini WHERE id=" + idOrdine + " LIMIT 1";
     let ordine = db.prepare(sql).all()[0];
@@ -510,18 +525,29 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   vino:
- *                     type: string
- *                     description: nome del vino.
- *                     example: Sauvignon
- *                   quantita:
- *                     type: integer
- *                     description: quantità in carrello.
- *                     example: 15
+ *               type: object
+ *               properties:
+ *                 totale:
+ *                   type: float
+ *                   description: totale carrello
+ *                   example: 250.5
+ *                 elementi:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       vino:
+ *                         type: string
+ *                         description: nome del vino.
+ *                         example: Sauvignon
+ *                       quantita:
+ *                         type: integer
+ *                         description: quantità in carrello.
+ *                         example: 15
+ *                       prezzo:
+ *                         type: float
+ *                         description: subtotale carrello.
+ *                         example: 125.7
  *       404:
  *         description: utente non trovato.
  *         content:
@@ -532,15 +558,19 @@ app.get('/api/ordini/dettaglio/:id', function (req, res) {
  *                example: utente non registrato
  */
 app.get('/api/carrello/:email', function (req, res) {
-    //todo: QUANDO FAI DELLE MODIFICHE ALLE API DIMMELO O POI LA DOC SI SMINCHIA
-    //todo: CAMBIA IL CALCOLO DEL TOTALE E SUB-TOTALE
     const cliente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(req.params.email)[0];
-
+    let total=0, carrello, subtotale;
     if(cliente){
-        const sql = `SELECT A.vino, A.quantita, V.prezzo FROM Acquistabili as A
-                    JOIN Vini V ON A.vino = V.nome 
+        const sql = `SELECT vino, quantita FROM Acquistabili
                     WHERE cliente ='${req.params.email}'`;
-        res.send(db.prepare(sql).all());
+        carrello = db.prepare(sql).all();
+        carrello.forEach((elem)=>{
+            subtotale = calcolaPrezzo(elem.quantita, elem.vino);
+            elem.prezzo = subtotale;
+            total += subtotale;
+        });
+
+        res.send({totale:total, elementi: carrello});
     }else{
         res.status(404);
         res.send("utente non registrato");

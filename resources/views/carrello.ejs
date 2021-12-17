@@ -76,8 +76,8 @@
         const response = await fetch(`/api/carrello/${getCookie('log-in')}`)
         .then(response => response.json())
         .then(data => {
-            carrello = data;
-            data.forEach((element, index) => {
+            carrello = data.elementi;
+            carrello.forEach((element, index) => {
                 $('#items').append(
                     `<div class="d-flex justify-content-between mb-3 align-items-center shadow bg-white rounded">
                         <img src="/resources/images/wine.jpg" class="img-thumbnail cart-img img-contain">
