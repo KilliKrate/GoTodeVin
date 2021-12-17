@@ -63,6 +63,7 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 // uguale per ordine però lì ho chiamato il prezzo della singola riga subtotale
 // da implementare dovrebbe mancare solo il totale del carrello e dell'ordine
 // il subtotale nell'ordine lo stampo senza il simbolo euro alla fine decidi te se modificarlo
+// todo: i bottoni di test nell'ordine sono cliccabili quando l'ordine è scaduto
 
 app.get('/', (req, res) => {
     res.render('index')
@@ -354,11 +355,12 @@ app.get('/api/assistenza', function (req, res) {
  *                example: utente non registrato
  */
 app.get('/api/ordini/:email', function (req, res) {
-    const sql = `SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${req.params.email}'`;
+    const email = req.params.email;
+    const sql = `SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='${email}'`;
     let ordini = db.prepare(sql).all();
     const dataPresente = new Date();
     let dateParts, d;
-    const cliente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(req.params.email)[0];
+    const cliente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
 
     if (cliente) {
         ordini.forEach((elem) => {
@@ -380,6 +382,7 @@ app.get('/api/ordini/:email', function (req, res) {
                 dateParts = elem.data_ritirabile.replace(' ', 'T') + 'Z';
                 d = new Date(dateParts);
                 if (elem.tipo == 'O' && dataPresente - d > 300000 && elem.stato == "daRitirare") {
+                    db.prepare("UPDATE Clienti SET saldo=saldo+? WHERE email=?").run(elem.totale, email)
                     let vini = db.prepare("SELECT * FROM Ordini_Vini WHERE ordine=?").all(elem.id);
                     vini.forEach((elem) => {
                         db.prepare("UPDATE Vini SET disponibilita=disponibilita+? WHERE nome=?").run(elem.quantita, elem.vino);
@@ -1508,7 +1511,7 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
                 break;
 
             case "evaso":
-                if (ordine.stato = "daRitirare") {
+                if (ordine.stato == "daRitirare") {
                     modifiche = db.prepare("UPDATE Ordini SET stato=?, data_ritirato=? WHERE id=?").run(stato, data, idOrdine);
                     res.send("ordine modificato");
                 } else {
