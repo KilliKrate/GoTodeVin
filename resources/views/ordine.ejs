@@ -53,6 +53,30 @@
           <label for="numLocker">Numero Locker</label>
           <input type="text" class="form-control" id="numLocker" readonly />
         </div>
+        <div class="form-group col">
+          <label for="totale">Totale</label>
+          <input type="text" class="form-control" id="totale" readonly />
+        </div>
+        <table id="vini" class="display w-100 mt-5">
+          <thead>
+            <tr>
+              <th>Vino</th>
+              <th>Quantità</th>
+              <th>Sub-totale (€)</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <div class="mb-4" id="buttons">
+        <button
+          id="buyBtn"
+          type="button"
+          class="btn btn-primary me-5"
+          data-bs-toggle="modal"
+          data-bs-target="#pagaPreordine"
+        >
+          Paga preordine
+        </button>
       </div>
       <div
         id="noQr"
@@ -78,10 +102,67 @@
           <tr>
             <th>Vino</th>
             <th>Quantità</th>
-            <th>Sub-totale (€)</th>
+            <th>€ Sub-totale</th>
           </tr>
         </thead>
       </table>
+    </div>
+
+    <div class="modal fade" id="pagaPreordine" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">Paga preordine</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <form id="paymentForm">
+            <div class="modal-body">
+              <input type="text" name="type" hidden id="IDPreordine" />
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="wallet"
+                autocomplete="off"
+                checked
+              />
+              <label class="btn btn-outline-primary" for="wallet">Wallet</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="paypal"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-primary" for="paypal">PayPal</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="payment"
+                id="pagopa"
+                autocomplete="off"
+              />
+              <label class="btn btn-outline-primary" for="pagopa">PagoPA</label>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button type="submit" class="btn btn-primary" id="modalSubmit">
+                Paga
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <%- include('./partials/bottom_scripts.ejs') %>
@@ -104,6 +185,8 @@
             $("#dataCreazione").val(data.data_creazione);
             $("#metodoPagamento").val(data.metodoPagamento);
 
+            $("#totale").val(data.totale + " €");
+
             if (data.tipo == "O") {
               $("#dataRitirabile").val(
                 data.data_ritirabile ? data.data_ritirabile : "N/A"
@@ -119,6 +202,8 @@
               } else {
                 $("#qrAvailable").hide();
               }
+
+              $("#buttons").remove();
             } else {
               $("#dataRitirabile").parent().parent().hide();
               $("#numLocker").parent().hide();
@@ -140,10 +225,33 @@
               ],
             });
           });
+
+        $("#paymentForm").submit(function (e) {
+          submitPayment(
+            $('input[name="payment"]:checked').attr("id"),
+            $("#idOrdine").val()
+          );
+          return false;
+        });
       }
 
-      initOrdine();
-      initUsers();
+      async function submitPayment(paymentType, ID) {
+        const response = await fetch(`/api/preordine/converti`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            metodoPagamento: paymentType,
+            id: ID,
+          }),
+        }).then((response) => console.log(response));
+        location.reload();
+      }
+
+      await initOrdine();
+      await initUsers();
     </script>
   </body>
 </html>
