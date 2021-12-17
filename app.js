@@ -80,11 +80,13 @@ app.get('/ordini/:id', (req, res) => {
     res.render('ordine')
 });
 
+app.get('/assistenza', (req, res) => {
+    res.render('assistenza');
+});
+
 app.get('/:name', (req, res) => {
     res.render('wine');
 });
-
-
 
 /* APIs */
 
@@ -705,7 +707,7 @@ app.post('/api/carrello/modifica', function (req, res) {
  *                example: vino non presente nel carrello
  */
 
-app.delete('/api/carrello/modifica', function (req, res) { // TODO: METTERE UNA RISPOSTA PARTICOLARE SE IL VINO NON C'ERA NEL CARRELLO
+app.delete('/api/carrello/modifica', function (req, res) {
     const { body: { nome, email } } = req;
     const sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${email}'`;
     const modifiche = db.prepare(sql).run();
