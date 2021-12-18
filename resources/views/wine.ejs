@@ -18,7 +18,7 @@
             <h1 class="display-5" id="titolo"></h1>
         </div>
 
-        <div class="d-md-flex justify-content-between">
+        <div class="d-md-flex justify-content-between mb-5">
             <img src="resources/images/wine.jpg" alt="wine" class="mb-3 mb-md-0 mw-100 img-contain">
             <div class="d-flex flex-column px-md-5">
                 <p class="lead"><strong id="descrizione"></strong></p>
@@ -35,6 +35,19 @@
                 <p class="lead" id="disponibilita">Disponibilità: </p>
             </div>
         </div>
+
+        <div class="d-flex flex-row align-items-center mb-3 mt-5">
+            <button
+                type="button"
+                class="btn btn-outline-danger mx-4"
+                id="aggiungi"
+            >
+                TEST: Setta Disponibilità
+            </button>
+            <input type="number" id="giacenza" placeholder="Quantità">
+        </div>
+
+        
 
     </div>
     </div>
@@ -93,6 +106,27 @@
                 }
             })
         }
+        
+
+        $('#aggiungi').click(async function() {
+            const disp = $('#giacenza').val();
+            const response = await fetch(`http://localhost:8080/api/gestionale/giacenza`, {
+                method: 'POST',
+                headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nomeVino: wine.nome, 
+                    quantita: Number.parseInt(disp)
+                })
+            })
+            if(response.status == 400){
+                alert("inserito valore non valido");
+            }else{
+                $("#disponibilita").text("Disponibilità: "+disp)
+            }
+        });
 
         initData();
         initUsers();

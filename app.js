@@ -63,6 +63,8 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 //todo: quando modifico la quantità in carrello se non avviene secondo me andrebbe mostrato un errore di qualche tipo o sembra che semplicemente non abbia preso l'input FATTO?
 //todo: ordine scaduto non dovrebbe avere il qr FATTO?
 //todo: bottone test link a report ordini visibile solo a Admin FATTO?
+//todo: setta disponibilità FATTO?
+//todo: aggiungi vino
 
 //todo: quando carico il carrello dovrei verificare la disponibilità?
 
