@@ -206,9 +206,9 @@
         })
         if(response.status == 200) location.reload();
         else{
-          console.log(response.text().then(function (text) {
+          response.text().then(function (text) {
             alert(text);
-          }));
+          });
         }
       }
 

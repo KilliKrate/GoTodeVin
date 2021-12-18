@@ -26,5 +26,7 @@ export async function initUsers() {
         if(res.name != "Admin"){
             $('#ReportOrdini').hide();
         }
+    }else{
+        $('#ReportOrdini').hide();
     }
 }
