@@ -23,5 +23,8 @@ export async function initUsers() {
         $('#saldoDiv').removeClass('d-none')
         $('#saldo').text(`${res.saldo}€`)
         $('.dropdown-toggle').html(res.name);
+        if(res.name != "Admin"){
+            $('#ReportOrdini').hide();
+        }
     }
 }

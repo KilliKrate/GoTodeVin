@@ -154,7 +154,13 @@
                   quantita: value,
                   email: getCookie('log-in')
                 }),
-              });
+              })
+              .then(response => response.json())
+              .then(data => {
+                if(!data.risultato){
+                  alert(data.messaggio)
+                }
+              })
 
               await fetch(`/api/carrello/${getCookie("log-in")}`)
               .then(response => response.json())
@@ -198,7 +204,12 @@
             tipo: orderType,
           }),
         })
-        location.reload();
+        if(response.status == 200) location.reload();
+        else{
+          console.log(response.text().then(function (text) {
+            alert(text);
+          }));
+        }
       }
 
       await initUsers();

@@ -55,17 +55,21 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 /* ROUTES */
 
 //todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
-//todo: carrello saldo non disponibilie
-//todo: i bottoni di test nell'ordine sono cliccabili quando l'ordine è scaduto
+
+//todo: carrello saldo non disponibilie FATTO?
+//todo: i bottoni di test nell'ordine sono cliccabili quando l'ordine è scaduto FATTO?
 //todo: se un cliente ordina tutti i vini disponibili ma un altro cliente aveva quel vino nel carrello giustamente quando prova ad acquistare non avviene l'acquisto ma non è nemmeno mostrato
-//      il messaggio che invio in cui specifico i vini non disponibili
-//todo: quando modifico la quantità in carrello se non avviene secondo me andrebbe mostrato un errore di qualche tipo o sembra che semplicemente non abbia preso l'input
-//todo: ordine scaduto non dovrebbero avere il qr
+//      il messaggio che invio in cui specifico i vini non disponibili FATTO?
+//todo: quando modifico la quantità in carrello se non avviene secondo me andrebbe mostrato un errore di qualche tipo o sembra che semplicemente non abbia preso l'input FATTO?
+//todo: ordine scaduto non dovrebbe avere il qr FATTO?
+//todo: bottone test link a report ordini visibile solo a Admin FATTO?
+
+//todo: quando carico il carrello dovrei verificare la disponibilità?
 
 //todo: aggiungere check su DB nel saldo di un cliente per >=0
 //todo: aggiungere check su DB nella password che deve essere almeno 8 caratteri così da fare i fighi e riferirsi al RF nel documento
 //      quindi length(password) >= 8
-//todo: check su disponibilità va moficiato perchè il valore -1 venga accettato (usato per identificare vino non più rifornito)
+//todo: check su disponibilità vino va moficiato perchè il valore -1 venga accettato (usato per identificare vino non più rifornito)
 
 app.get('/', (req, res) => {
     res.render('index')

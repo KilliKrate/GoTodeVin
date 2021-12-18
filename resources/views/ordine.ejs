@@ -233,9 +233,11 @@
 
             if (data.stato == "daRitirare") {
               $("#ritirabile").prop("disabled", true);
-            } else if (data.stato == "evaso") {
+            } else if (data.stato == "evaso" || data.stato == "scaduto") {
               $("#ritirabile").prop("disabled", true);
               $("#ritirato").prop("disabled", true);
+              $("#qrAvailable").hide();
+              $("#noQr").hide();
             }
           });
 
