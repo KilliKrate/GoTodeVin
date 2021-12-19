@@ -61,3 +61,23 @@ test('API 2.1: wine\'s details not found', function (assert) {
             assert.end();
         });
 });
+
+/*
+
+API ASSISTENZA
+
+*/
+
+test('API 3: Operator\'s contacts', function (assert) {
+    request(app)
+        .get('/api/assistenza')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT * FROM Operatori`).all();
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'Operators found');
+            assert.end();
+        });
+});
