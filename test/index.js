@@ -710,6 +710,7 @@ test('API 19: edit order status', function (assert) {
             assert.end();
             //resetta stato database a prima del test
             db.prepare("UPDATE Ordini SET stato='inLavorazione', qr=NULL, locker=NULL, data_ritirabile=NULL WHERE id=1").run();
+            console.log("\n");
         });
 });
 
@@ -724,7 +725,10 @@ test('API 19.1: edit order status failed', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t");
             assert.error(err, 'No error');
+            process.stdout.write("\t");
             assert.same(res.text,'ordine inesistente', 'edit status failed');
             assert.end();
         });
