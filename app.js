@@ -1130,7 +1130,7 @@ app.post('/api/wallet/ricarica', function (req, res) {
     const { body: { email, ricarica } } = req;
     const utente = db.prepare("SELECT * FROM Clienti WHERE email=?").all(email)[0];
     if (utente && ricarica > 0) {
-        console.log(db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(ricarica, email).changes);
+        db.prepare(`UPDATE Clienti SET saldo=saldo+? WHERE email=?`).run(ricarica, email);
         res.send({ risposta: true, messaggio: "ricarica effettuata" });
     } else {
         res.status(400);

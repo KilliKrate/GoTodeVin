@@ -2,6 +2,7 @@ var test = require('tape');
 var request = require('supertest');
 
 let {app,db} = require('../');
+let idPreorder;
 
 /*
 
@@ -364,6 +365,7 @@ test('API 10: Create oreder/preorder', function (assert) {
             assert.error(err, 'No error');
             assert.same(res.text,'ordine creato', 'order/preorder created');
             assert.end();
+            idPreorder = db.prepare("SELECT id FROM Ordini WHERE cliente=? AND tipo=?").all("TEST", "P")[0].id;
         });
 });
 
@@ -388,40 +390,6 @@ test('API 9: Restore shopping cart\'s items', function (assert) {
             assert.end();
         });
 });
-
-/*
-test('API 10.1: Create oreder/preorder: Wine not found ', function (assert) {
-    request(app)
-        .post('/api/carrello/pre-ordina')
-        .send({
-            "tipo": "O",
-            "email": "tEST",
-            "metodoPagamento": "wallet"
-          })
-        .expect(400)
-        .end((err, res) => {
-
-            assert.error(err, 'No error');
-            assert.same(res.text,'I seguenti vini non sono disponibili ...', 'wines not found');
-            assert.end();
-        });
-});
-
-test('API 10.2: Create oreder/preorder:: insufficent wallet', function (assert) {
-    request(app)
-        .post('/api/carrello/pre-ordina')
-        .send({
-            "tipo": "O",
-            "email": "Pluto@GoToDeMail.com",
-            "metodoPagamento": "wallet"
-          })
-        .expect(402)
-        .end((err, res) => {
-            assert.error(err, 'No error');
-            assert.same(res.text,'saldo insufficente', 'insufficent wallet');
-            assert.end();
-        });
-});*/
 
 /*
 
@@ -513,13 +481,13 @@ test('API 14.1: Recharge user wallet failed', function (assert) {
             assert.end();
         });
 });
-/*
+
 test('API 15: convert preorder', function (assert) {
     request(app)
         .post('/api/preordine/converti')
         .expect('Content-Type', /json/)
         .send({
-            "id": 9,
+            "id": idPreorder,
             "metodoPagamento": "wallet"
         })
         .expect(200)
@@ -527,8 +495,9 @@ test('API 15: convert preorder', function (assert) {
             assert.error(err, 'No error');
             assert.same(res.body.risultato,true, 'preorder converted');
             assert.end();
+            db.prepare("DELETE FROM Ordini WHERE id=?").run(idPreorder);
         });
-});*/
+});
 
 test('API 15.1: convert preorder failed', function (assert) {
     request(app)
@@ -545,6 +514,7 @@ test('API 15.1: convert preorder failed', function (assert) {
             assert.end();
         });
 });
+
 /*
 test('API 15.2: convert preorder failed: insufficant wallet', function (assert) {
     request(app)
@@ -561,6 +531,7 @@ test('API 15.2: convert preorder failed: insufficant wallet', function (assert) 
             assert.end();
         });
 });
+*/
 
 test('API 16: All orders', function (assert) {
     request(app)
@@ -568,51 +539,54 @@ test('API 16: All orders', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-
             var expectedResult = db.prepare(`SELECT * FROM Ordini`).all();
+
+            expectedResult.forEach((elem, ind) => {
+                sql = "SELECT vino,quantita FROM Ordini_Vini WHERE ordine=" + elem.id;
+                vini = db.prepare(sql).all();
+                expectedResult[ind].vini = vini;
+            });
 
             assert.error(err, 'No error');
             assert.same(res.body, expectedResult, 'orders found');
             assert.end();
         });
-});*/
+});
 
-test('API 17: edith quantity', function (assert) {
+test('API 17: edit quantity', function (assert) {
     request(app)
         .post('/api/gestionale/giacenza')
-        .expect('Content-Type', /json/)
         .send({
             "quantita": 200,
-            "nomeVino": "Sauvignon"
+            "nomeVino": "Sauvignon Exclusiv"
         })
         .expect(200)
         .end((err, res) => {
             assert.error(err, 'No error');
-            assert.same(res.text,'Vino specificato modificato', 'quantity edited');
+            assert.same(res.text,'vino specificato modificato', 'quantity edited');
             assert.end();
         });
 });
 
-test('API 17.1: edith quantity failed', function (assert) {
+test('API 17.1: edit quantity failed', function (assert) {
     request(app)
         .post('/api/gestionale/giacenza')
-        .expect('Content-Type', /json/)
         .send({
             "quantita": 200000000,
-            "nomeVino": "Sauvignon"
+            "nomeVino": "Savignon"
         })
         .expect(400)
         .end((err, res) => {
             assert.error(err, 'No error');
-            assert.same(res.text,'la quantità specificata non è valida', 'quantity edited');
+            assert.same(res.text,'il vino che si vuole modificare non esiste', 'quantity edited failed');
             assert.end();
         });
 });
-/*
+
+
 test('API 18: create wine', function (assert) {
     request(app)
         .post('/api/gestionale/creaVino')
-        .expect('Content-Type', /json/)
         .send({
             "nomeVino": "Sauvignon riserva",
             "annata": 2015,
@@ -623,7 +597,7 @@ test('API 18: create wine', function (assert) {
         .expect(200)
         .end((err, res) => {
             assert.error(err, 'No error');
-            assert.same(res.text,'vino inserito', 'quantity edited');
+            assert.same(res.text,'vino inserito', 'wine created');
             assert.end();
         });
 });
@@ -631,7 +605,6 @@ test('API 18: create wine', function (assert) {
 test('API 18.1: create wine failed', function (assert) {
     request(app)
         .post('/api/gestionale/creaVino')
-        .expect('Content-Type', /json/)
         .send({
             "nomeVino": "Sauvignon riserva",
             "annata": 2015,
@@ -642,15 +615,17 @@ test('API 18.1: create wine failed', function (assert) {
         .expect(400)
         .end((err, res) => {
             assert.error(err, 'No error');
-            assert.same(res.text,'richiesta malformata', 'quantity edited');
+            assert.same(res.text,'vino già presente', 'wine not created');
             assert.end();
+            //resetta stato database a prima del test
+            db.prepare("DELETE FROM Vini WHERE nome=?").run("Sauvignon riserva");
         });
-});*/
-/*
+});
+
+
 test('API 19: edit order status', function (assert) {
     request(app)
         .post('/api/gestionale/modifica_stato_ordine')
-        .expect('Content-Type', /json/)
         .send({
             "idOrdine": 1,
             "stato": "daRitirare",
@@ -662,13 +637,14 @@ test('API 19: edit order status', function (assert) {
             assert.error(err, 'No error');
             assert.same(res.text,'ordine modificato', 'status edited');
             assert.end();
+            //resetta stato database a prima del test
+            db.prepare("UPDATE Ordini SET stato='inLavorazione', qr=NULL, locker=NULL, data_ritirabile=NULL WHERE id=1").run();
         });
 });
 
 test('API 19.1: edit order status failed', function (assert) {
     request(app)
         .post('/api/gestionale/modifica_stato_ordine')
-        .expect('Content-Type', /json/)
         .send({
             "idOrdine": -1,
             "stato": "daRitirare",
@@ -678,9 +654,7 @@ test('API 19.1: edit order status failed', function (assert) {
         .expect(400)
         .end((err, res) => {
             assert.error(err, 'No error');
-            assert.same(res.text,'richiesta malformata', 'edit status failed');
+            assert.same(res.text,'ordine inesistente', 'edit status failed');
             assert.end();
         });
 });
-
-*/
