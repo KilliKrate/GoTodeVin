@@ -270,3 +270,38 @@ test('API 7.2: Edit shopping cart error', function (assert) {
             assert.end();
         });
 });
+
+test('API 8: Delete shopping cart\'s items', function (assert) {
+    request(app)
+        .del('/api/carrello/modifica')
+        .send({
+            "nome": "Sauvignon Exclusiv",
+            "email": "TEST"
+          })
+        .expect(200)
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.text,'eliminato', 'Removed shopping cart item');
+            assert.end();
+        });
+});
+
+test('API 8.1: Delete shopping cart\'s items not found', function (assert) {
+    request(app)
+        .del('/api/carrello/modifica')
+        .send({
+            "nome": "Sauvi lusiv",
+            "email": "TEST"
+          })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'vino non presente nel carrello', 'shopping cart item not found');
+            assert.end();
+        });
+});
