@@ -29,7 +29,7 @@
           Compra
         </button>
         <button id="preorderBtn" type="button" class="btn btn-secondary" data-bs-toggle="modal"
-          data-bs-target="#ordinaVino">
+          data-bs-target="#preordinaVino">
           Preordina
         </button>
       </div>
@@ -45,6 +45,7 @@
         </div>
         <form id="paymentForm">
           <div class="modal-body">
+            <p>Metodo di pagamento:</p>
             <input type="text" name="type" hidden id="op-type" />
             <input type="radio" class="btn-check" name="payment" id="wallet" autocomplete="off" checked />
             <label class="btn btn-outline-primary" for="wallet">Wallet</label>
@@ -58,7 +59,31 @@
               Close
             </button>
             <button type="submit" class="btn btn-primary" id="modalSubmit">
-              Save changes
+              Ordina
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="preordinaVino" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Preordina</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="preorderForm">
+          <div class="modal-body">
+            <p>Confermi il preordine del carrello?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Close
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Preordina
             </button>
           </div>
         </form>
@@ -83,7 +108,7 @@
         const response = await fetch(`/api/carrello/${getCookie("log-in")}`)
           .then((response) => response.json())
           .then((data) => {
-            $("#totaleCarrello").text(`Totale: ${data.totale}€`);
+            $("#totaleCarrello").text(`Totale: ${data.totale.toFixed(2)}€`);
             carrello = data.elementi;
             carrello.forEach((element, index) => {
               $("#items").append(
@@ -115,8 +140,6 @@
             });
 
             $("#preorderBtn").click(function () {
-              $("#modalTitle").text("Preordina Carrello");
-              $("#modalSubmit").text("Preordina");
               $("#op-type").val("P");
             });
 
@@ -129,6 +152,14 @@
             $("#paymentForm").submit(function (e) {
               submitPayment(
                 $('input[name="payment"]:checked').attr("id"),
+                $("#op-type").val()
+              );
+              return false;
+            });
+
+            $("#preorderForm").submit(function (e) {
+              submitPayment(
+                "wallet",
                 $("#op-type").val()
               );
               return false;

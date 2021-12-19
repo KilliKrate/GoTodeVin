@@ -55,12 +55,8 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 /* ROUTES */
 
 // DA FARE:
-//todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
-//todo: il totale nel carrello è ancora sporco con cifre dopo la seconda
 
 // DUBBIO:
-//todo: quando carico il carrello dovrei verificare la disponibilità?
-//todo: controllo che annata inserita sia minore della data attuale
 
 // COMPLETATI DA VERIFICARE:
 //todo: carrello saldo non disponibilie FATTO?
@@ -72,6 +68,9 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 //todo: bottone test link a report ordini visibile solo a Admin FATTO?
 //todo: setta disponibilità FATTO?
 //todo: aggiungi vino al catalogo
+//todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
+//todo: il totale nel carrello è ancora sporco con cifre dopo la seconda
+//todo: controllo che annata inserita sia minore della data attuale
 
 
 
@@ -1227,7 +1226,7 @@ app.post('/api/preordine/converti', function (req, res) {
         }
 
         if (saldoSuff) {
-            db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione' WHERE id=${req.body.id}`).run();
+            db.prepare(`UPDATE Ordini SET tipo='O', stato='inLavorazione', metodoPagamento=? WHERE id=${req.body.id}`).run(req.body.metodoPagamento);
             res.send({ risultato: true, messaggio: "preordine convertito" });
         } else {
             res.status(402)
@@ -1439,7 +1438,7 @@ app.post('/api/gestionale/giacenza', function (req, res) {
 app.post('/api/gestionale/creaVino', function (req, res) {
     const { body: { nomeVino, annata, descrizione, disponibilita, prezzo } } = req;
 
-    if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0) {
+    if (nomeVino != "" && descrizione != "" && disponibilita > 0 && prezzo > 0.0 && annata <= (new Date().getFullYear())) {
         try {
             db.prepare("INSERT INTO Vini VALUES (?,?,?,?,?)").run(nomeVino, annata, descrizione, disponibilita, prezzo);
             res.send("vino inserito");
