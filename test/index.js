@@ -481,3 +481,35 @@ test('API 13.1: Users Wallet not found', function (assert) {
             assert.end();
         });
 });
+
+test('API 14: Recharge user wallet', function (assert) {
+    request(app)
+        .post('/api/wallet/ricarica')
+        .expect('Content-Type', /json/)
+        .send({
+            "ricarica": 15.3,
+            "email": "TEST"
+        })
+        .expect(200)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.risposta,true, 'wallet recharged');
+            assert.end();
+        });
+});
+
+test('API 14.1: Recharge user wallet failed', function (assert) {
+    request(app)
+        .post('/api/wallet/ricarica')
+        .expect('Content-Type', /json/)
+        .send({
+            "ricarica": 15.3,
+            "email": "TES"
+        })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.risposta,false, 'wallet not recharged');
+            assert.end();
+        });
+});
