@@ -1544,3 +1544,8 @@ app.post('/api/gestionale/modifica_stato_ordine', function (req, res) {
 app.listen(8080, function () {
     console.log('GoTodeVin listening on port 8080!');
 });
+
+module.exports ={
+    app,
+    db,
+};
