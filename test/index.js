@@ -112,3 +112,51 @@ test('API 4.1: Customer\'s orders not found', function (assert) {
             assert.end();
         });
 });
+
+test('API 5: Order\'s details', function (assert) {
+    request(app)
+        .get('/api/ordini/dettaglio/1')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = {
+                "id": 1,
+                "tipo": "O",
+                "qr": null,
+                "locker": null,
+                "stato": "inLavorazione",
+                "totale": 46.54,
+                "metodoPagamento": "pagopa",
+                "data_creazione": "2021-12-19 10:49:11.252",
+                "data_ritirabile": null,
+                "data_ritirato": null,
+                "cliente": "TEST",
+                "vini": [
+                  {
+                    "vino": "Sauvignon",
+                    "quantita": 1,
+                    "subtotale": 14
+                  },
+                  {
+                    "vino": "Solaris",
+                    "quantita": 2,
+                    "subtotale": 32.54
+                  }
+                ]
+              };
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'details found');
+            assert.end();
+        });
+});
+
+test('API 5.1: Order\'s details not found', function (assert) {
+    request(app)
+        .get('/api/ordini/dettaglio/-1')
+        .expect(404)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.same(res.text, 'ordine inesistente', 'order not found');
+            assert.end();
+        });
+});
