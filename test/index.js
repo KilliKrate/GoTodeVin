@@ -160,3 +160,45 @@ test('API 5.1: Order\'s details not found', function (assert) {
             assert.end();
         });
 });
+
+/*
+
+API CARRELLO
+
+*/
+
+test('API 6: Shopping cart\'s details', function (assert) {
+    request(app)
+        .get('/api/carrello/TEST')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {;
+            
+            var expectedResult = {
+                "totale": 70,
+                "elementi": [
+                  {
+                    "vino": "Sauvignon Exclusiv",
+                    "quantita": 2,
+                    "prezzo": 70
+                  },
+                ]
+              };
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'User\'s cart');
+            assert.end();
+        });
+});
+
+test('API 6.1: Shopping cart\'s details not found', function (assert) {
+    request(app)
+        .get('/api/carrello/TEST1')
+        .expect(404)
+        .end(function (err, res) {;
+            
+            assert.error(err, 'No error');
+            assert.same(res.text, 'utente non registrato', 'User not found');
+            assert.end();
+        });
+});
