@@ -57,10 +57,6 @@ const db = require('better-sqlite3')('./resources/data/GoToDeDB.db');
 // DA FARE:
 //todo: IL PREORDINA NON DOVREBBE CHIEDERE IL METODO DI PAGAMENTO
 //todo: il totale nel carrello è ancora sporco con cifre dopo la seconda
-//todo: aggiungere check su DB nel saldo di un cliente per >=0
-//todo: aggiungere check su DB nella password che deve essere almeno 8 caratteri così da fare i fighi e riferirsi al RF nel documento
-//      quindi length(password) >= 8
-//todo: check su disponibilità vino va moficiato perchè il valore -1 venga accettato (usato per identificare vino non più rifornito)
 
 // DUBBIO:
 //todo: quando carico il carrello dovrei verificare la disponibilità?
