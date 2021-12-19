@@ -50,3 +50,14 @@ test('API 2: wine\'s details', function (assert) {
             assert.end();
         });
 });
+
+test('API 2.1: wine\'s details not found', function (assert) {
+    request(app)
+        .get('/api/catalogo/dettaglio/Sauvgnon')
+        .expect(404)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.same(res.text,'vino non trovato' , 'details not found');
+            assert.end();
+        });
+});
