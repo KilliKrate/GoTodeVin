@@ -305,3 +305,120 @@ test('API 8.1: Delete shopping cart\'s items not found', function (assert) {
             assert.end();
         });
 });
+
+test('API 9: Add shopping cart\'s items', function (assert) {
+    request(app)
+        .post('/api/carrello/aggiungi')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 2,
+            "nome": "Sauvignon Exclusiv",
+            "email": "TEST"
+        })
+        .expect(200)
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.body.aggiunto,true, 'items added to shopping cart');
+            assert.end();
+        });
+});
+
+test('API 9.1: Add shopping cart\'s items not found', function (assert) {
+    request(app)
+        .post('/api/carrello/aggiungi')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 2,
+            "nome": "Sauvi lusiv",
+            "email": "TEST"
+        })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.aggiunto,false, 'items not found');
+            assert.end();
+        });
+});
+
+
+test('API 10: Create oreder/preorder', function (assert) {
+    request(app)
+        .post('/api/carrello/pre-ordina')
+        .send({
+            "tipo": "P",
+            "email": "TEST",
+            "metodoPagamento": "wallet"
+          })
+        .expect(200)
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.text,'ordine creato', 'order/preorder created');
+            assert.end();
+        });
+});
+
+test('API 9: Restore shopping cart\'s items', function (assert) {
+    request(app)
+        .post('/api/carrello/aggiungi')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 2,
+            "nome": "Sauvignon Exclusiv",
+            "email": "TEST"
+        })
+        .expect(200)
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.body.aggiunto,true, 'items added to shopping cart');
+            assert.end();
+        });
+});
+
+/*
+test('API 10.1: Create oreder/preorder: Wine not found ', function (assert) {
+    request(app)
+        .post('/api/carrello/pre-ordina')
+        .send({
+            "tipo": "O",
+            "email": "tEST",
+            "metodoPagamento": "wallet"
+          })
+        .expect(400)
+        .end((err, res) => {
+
+            assert.error(err, 'No error');
+            assert.same(res.text,'I seguenti vini non sono disponibili ...', 'wines not found');
+            assert.end();
+        });
+});
+
+test('API 10.2: Create oreder/preorder:: insufficent wallet', function (assert) {
+    request(app)
+        .post('/api/carrello/pre-ordina')
+        .send({
+            "tipo": "O",
+            "email": "Pluto@GoToDeMail.com",
+            "metodoPagamento": "wallet"
+          })
+        .expect(402)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'saldo insufficente', 'insufficent wallet');
+            assert.end();
+        });
+});*/
