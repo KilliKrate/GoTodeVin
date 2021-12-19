@@ -81,3 +81,34 @@ test('API 3: Operator\'s contacts', function (assert) {
             assert.end();
         });
 });
+
+/*
+
+API ORDINI
+
+*/
+
+test('API 4: Customer\'s orders', function (assert) {
+    request(app)
+        .get('/api/ordini/TEST')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='TEST'`).all();
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'Customer\'s orders found');
+            assert.end();
+        });
+});
+
+test('API 4.1: Customer\'s orders not found', function (assert) {
+    request(app)
+        .get('/api/ordini/TEST1')
+        .expect(404)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.same(res.text, 'utente non registrato', 'Customer\'s orders not found');
+            assert.end();
+        });
+});
