@@ -561,3 +561,107 @@ test('API 15.2: convert preorder failed: insufficant wallet', function (assert) 
             assert.end();
         });
 });
+
+test('API 16: All orders', function (assert) {
+    request(app)
+        .get('/api/produttore/dettaglio_ordini')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+
+            var expectedResult = db.prepare(`SELECT * FROM Ordini`).all();
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'orders found');
+            assert.end();
+        });
+});*/
+
+test('API 17: edith quantity', function (assert) {
+    request(app)
+        .post('/api/gestionale/giacenza')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 200,
+            "nomeVino": "Sauvignon"
+        })
+        .expect(200)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'Vino specificato modificato', 'quantity edited');
+            assert.end();
+        });
+});
+
+test('API 17.1: edith quantity failed', function (assert) {
+    request(app)
+        .post('/api/gestionale/giacenza')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 200000000,
+            "nomeVino": "Sauvignon"
+        })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'la quantità specificata non è valida', 'quantity edited');
+            assert.end();
+        });
+});
+/*
+test('API 18: create wine', function (assert) {
+    request(app)
+        .post('/api/gestionale/creaVino')
+        .expect('Content-Type', /json/)
+        .send({
+            "nomeVino": "Sauvignon riserva",
+            "annata": 2015,
+            "descrizione": "vino eccelso da note amare che non dispiacciono",
+            "disponibilita": 56,
+            "prezzo": 15.3
+          })
+        .expect(200)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'vino inserito', 'quantity edited');
+            assert.end();
+        });
+});
+
+test('API 18.1: create wine failed', function (assert) {
+    request(app)
+        .post('/api/gestionale/creaVino')
+        .expect('Content-Type', /json/)
+        .send({
+            "nomeVino": "Sauvignon riserva",
+            "annata": 2015,
+            "descrizione": "vino eccelso da note amare che non dispiacciono",
+            "disponibilita": 56,
+            "prezzo": 15.3
+          })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'richiesta malformata', 'quantity edited');
+            assert.end();
+        });
+});*/
+/*
+test('API 18: edit order status', function (assert) {
+    request(app)
+        .post('/api/gestionale/modifica_stato_ordine')
+        .expect('Content-Type', /json/)
+        .send({
+            "idOrdine": 1,
+            "stato": "daRitirare",
+            "qr": "string",
+            "locker": 5
+        })
+        .expect(200)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'ordine modificato', 'status edited');
+            assert.end();
+        });
+});
+*/
