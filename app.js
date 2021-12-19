@@ -732,7 +732,7 @@ app.post('/api/carrello/modifica', function (req, res) {
 
 app.delete('/api/carrello/modifica', function (req, res) {
     const { body: { nome, email } } = req;
-    const sql = `DELETE FROM Acquistabili WHERE vino='${nomeVino}' AND cliente = '${email}'`;
+    const sql = `DELETE FROM Acquistabili WHERE vino='${nome}' AND cliente = '${email}'`;
     const modifiche = db.prepare(sql).run();
     if (modifiche.changes > 0) {
         res.send("eliminato");
