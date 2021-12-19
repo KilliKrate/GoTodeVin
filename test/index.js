@@ -647,7 +647,7 @@ test('API 18.1: create wine failed', function (assert) {
         });
 });*/
 /*
-test('API 18: edit order status', function (assert) {
+test('API 19: edit order status', function (assert) {
     request(app)
         .post('/api/gestionale/modifica_stato_ordine')
         .expect('Content-Type', /json/)
@@ -664,4 +664,23 @@ test('API 18: edit order status', function (assert) {
             assert.end();
         });
 });
+
+test('API 19.1: edit order status failed', function (assert) {
+    request(app)
+        .post('/api/gestionale/modifica_stato_ordine')
+        .expect('Content-Type', /json/)
+        .send({
+            "idOrdine": -1,
+            "stato": "daRitirare",
+            "qr": "string",
+            "locker": 5
+        })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.text,'richiesta malformata', 'edit status failed');
+            assert.end();
+        });
+});
+
 */
