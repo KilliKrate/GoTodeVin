@@ -456,3 +456,28 @@ test('API 12: User info', function (assert) {
             assert.end();
         });
 });
+
+test('API 13: Users Wallet', function (assert) {
+    request(app)
+        .get('/api/wallet/saldo/TEST')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT saldo FROM Clienti WHERE email='TEST'`).all()[0];
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'Wallet info found');
+            assert.end();
+        });
+});
+
+test('API 13.1: Users Wallet not found', function (assert) {
+    request(app)
+        .get('/api/wallet/saldo/TEST1')
+        .expect(404)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.same(res.text, 'email non registrata', 'Wallet info not found');
+            assert.end();
+        });
+});
