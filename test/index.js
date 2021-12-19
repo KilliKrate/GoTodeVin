@@ -36,3 +36,17 @@ test('API 1: Search wine', function (assert) {
             assert.end();
         });
 });
+
+test('API 2: wine\'s details', function (assert) {
+    request(app)
+        .get('/api/catalogo/dettaglio/Sauvignon')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT * FROM Vini WHERE nome LIKE 'Sauvignon'`).all()[0];
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'details found');
+            assert.end();
+        });
+});
