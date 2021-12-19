@@ -16,7 +16,10 @@ test('ROUTE: /', function (assert){
         .get('/')
         .expect(200)
         .end(function (err) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -26,7 +29,10 @@ test('ROUTE: /carrello', function (assert){
         .get('/carrello')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -36,7 +42,10 @@ test('ROUTE: /ordini', function (assert){
         .get('/ordini')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -46,7 +55,10 @@ test('ROUTE: /ordini/id', function (assert){
         .get('/ordini/id')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -56,7 +68,10 @@ test('ROUTE: /assistenza', function (assert){
         .get('/assistenza')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -66,7 +81,10 @@ test('ROUTE: /ricarica', function (assert){
         .get('/ricarica')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -76,7 +94,10 @@ test('ROUTE: /wine', function (assert){
         .get('/Sauvignon')
         .expect(200)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            console.log('\n');
             assert.end();
         });
 });
@@ -87,10 +108,13 @@ test('API 0: Catalog', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT nome, annata, prezzo FROM Vini WHERE disponibilita > 0`).all();
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'wines as expected');
+            console.log('\n')
             assert.end();
         });
 });
@@ -101,10 +125,13 @@ test('API 1: Search wine', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT nome,annata FROM Vini WHERE nome LIKE ? AND annata = ? AND disponibilita > 0`).all('%Sauvignon%',2016);
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'correct wine');
+            console.log('\n')
             assert.end();
         });
 });
@@ -115,10 +142,13 @@ test('API 2: wine\'s details', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT * FROM Vini WHERE nome LIKE 'Sauvignon'`).all()[0];
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'details found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -128,8 +158,12 @@ test('API 2.1: wine\'s details not found', function (assert) {
         .get('/api/catalogo/dettaglio/Sauvgnon')
         .expect(404)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'vino non trovato' , 'details not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -146,10 +180,13 @@ test('API 3: Operator\'s contacts', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT * FROM Operatori`).all();
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'Operators found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -166,10 +203,13 @@ test('API 4: Customer\'s orders', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='TEST'`).all();
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'Customer\'s orders found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -179,8 +219,12 @@ test('API 4.1: Customer\'s orders not found', function (assert) {
         .get('/api/ordini/TEST1')
         .expect(404)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text, 'utente non registrato', 'Customer\'s orders not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -215,9 +259,13 @@ test('API 5: Order\'s details', function (assert) {
                     "subtotale": 32.54
                   }
                 ]
-              };
+            };
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'details found');
+            console.log('\n')
             assert.end();
         });
 });
@@ -227,8 +275,12 @@ test('API 5.1: Order\'s details not found', function (assert) {
         .get('/api/ordini/dettaglio/-1')
         .expect(404)
         .end(function (err, res) {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text, 'ordine inesistente', 'order not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -256,9 +308,12 @@ test('API 6: Shopping cart\'s details', function (assert) {
                   },
                 ]
               };
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'User\'s cart');
+            console.log('\n');
             assert.end();
         });
 });
@@ -268,9 +323,12 @@ test('API 6.1: Shopping cart\'s details not found', function (assert) {
         .get('/api/carrello/TEST1')
         .expect(404)
         .end(function (err, res) {;
-            
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text, 'utente non registrato', 'User not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -290,9 +348,12 @@ test('API 7: Edit shopping cart', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-
+            console.log();
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risultato,true, 'shopping cart edited');
+            process.stdout.write("\t \u2713  ");
+            console.log('\n');
             assert.end();
         });
 });
@@ -314,9 +375,12 @@ test('API 7.1: Update shopping cart', function (assert) {
                   },                  
                 ]
               };
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'updated quantity');
+            console.log('\n')
             assert.end();
         });
 });
@@ -336,9 +400,12 @@ test('API 7.2: Edit shopping cart error', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risultato,false, 'shopping cart not edited');
+            console.log('n');
             assert.end();
         });
 });
@@ -356,9 +423,12 @@ test('API 8: Delete shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'eliminato', 'Removed shopping cart item');
+            console.log('/n');
             assert.end();
         });
 });
@@ -372,8 +442,12 @@ test('API 8.1: Delete shopping cart\'s items not found', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'vino non presente nel carrello', 'shopping cart item not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -393,9 +467,12 @@ test('API 9: Add shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.aggiunto,true, 'items added to shopping cart');
+            console.log('\n');
             assert.end();
         });
 });
@@ -411,8 +488,12 @@ test('API 9.1: Add shopping cart\'s items not found', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.aggiunto,false, 'items not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -433,8 +514,12 @@ test('API 10: Create oreder/preorder', function (assert) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
 
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'ordine creato', 'order/preorder created');
+            console.log('\n');
             assert.end();
             idPreorder = db.prepare("SELECT id FROM Ordini WHERE cliente=? AND tipo=?").all("TEST", "P")[0].id;
         });
@@ -455,9 +540,12 @@ test('API 9: Restore shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.aggiunto,true, 'items added to shopping cart');
+            console.log('\n');
             assert.end();
         });
 });
@@ -475,9 +563,12 @@ test('API 11: Users info', function (assert) {
         .expect(200)
         .end(function (err, res) {
             var expectedResult = db.prepare(`SELECT email, name FROM Clienti`).all();
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'Users info found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -489,9 +580,12 @@ test('API 12: User info', function (assert) {
         .expect(200)
         .end(function (err, res) {
             var expectedResult = db.prepare(`SELECT email, name, saldo FROM Clienti WHERE email='TEST'`).all()[0];
-
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'Users info found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -502,10 +596,13 @@ test('API 13: Users Wallet', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT saldo FROM Clienti WHERE email='TEST'`).all()[0];
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'Wallet info found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -515,8 +612,12 @@ test('API 13.1: Users Wallet not found', function (assert) {
         .get('/api/wallet/saldo/TEST1')
         .expect(404)
         .end(function (err, res) {
+            console.log;
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text, 'email non registrata', 'Wallet info not found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -531,8 +632,12 @@ test('API 14: Recharge user wallet', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risposta,true, 'wallet recharged');
+            console.log('\n');
             assert.end();
         });
 });
@@ -547,8 +652,12 @@ test('API 14.1: Recharge user wallet failed', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risposta,false, 'wallet not recharged');
+            console.log('\n');
             assert.end();
         });
 });
@@ -563,8 +672,12 @@ test('API 15: convert preorder', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risultato,true, 'preorder converted');
+            console.log('\n');
             assert.end();
             db.prepare("DELETE FROM Ordini WHERE id=?").run(idPreorder);
         });
@@ -580,8 +693,12 @@ test('API 15.1: convert preorder failed', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body.risultato,false, 'preorder converted');
+            console.log('\n');
             assert.end();
         });
 });
@@ -610,6 +727,7 @@ test('API 16: All orders', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
+            console.log();
             var expectedResult = db.prepare(`SELECT * FROM Ordini`).all();
 
             expectedResult.forEach((elem, ind) => {
@@ -617,9 +735,11 @@ test('API 16: All orders', function (assert) {
                 vini = db.prepare(sql).all();
                 expectedResult[ind].vini = vini;
             });
-
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.body, expectedResult, 'orders found');
+            console.log('\n');
             assert.end();
         });
 });
@@ -633,8 +753,12 @@ test('API 17: edit quantity', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'vino specificato modificato', 'quantity edited');
+            console.log('\n');
             assert.end();
         });
 });
@@ -648,8 +772,12 @@ test('API 17.1: edit quantity failed', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'il vino che si vuole modificare non esiste', 'quantity edited failed');
+            console.log('\n');
             assert.end();
         });
 });
@@ -667,8 +795,12 @@ test('API 18: create wine', function (assert) {
           })
         .expect(200)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'vino inserito', 'wine created');
+            console.log('\n');
             assert.end();
         });
 });
@@ -685,8 +817,12 @@ test('API 18.1: create wine failed', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'vino già presente', 'wine not created');
+            console.log('\n');
             assert.end();
             //resetta stato database a prima del test
             db.prepare("DELETE FROM Vini WHERE nome=?").run("Sauvignon riserva");
@@ -705,12 +841,15 @@ test('API 19: edit order status', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
+            console.log();
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'ordine modificato', 'status edited');
+            console.log('\n');
             assert.end();
             //resetta stato database a prima del test
             db.prepare("UPDATE Ordini SET stato='inLavorazione', qr=NULL, locker=NULL, data_ritirabile=NULL WHERE id=1").run();
-            console.log("\n");
         });
 });
 
