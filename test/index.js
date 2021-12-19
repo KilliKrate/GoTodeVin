@@ -10,6 +10,77 @@ API CATALOGO
 
 */
 
+
+test('ROUTE: /', function (assert){
+    request(app)
+        .get('/')
+        .expect(200)
+        .end(function (err) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /carrello', function (assert){
+    request(app)
+        .get('/carrello')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /ordini', function (assert){
+    request(app)
+        .get('/ordini')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /ordini/id', function (assert){
+    request(app)
+        .get('/ordini/id')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /assistenza', function (assert){
+    request(app)
+        .get('/assistenza')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /ricarica', function (assert){
+    request(app)
+        .get('/ricarica')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
+test('ROUTE: /wine', function (assert){
+    request(app)
+        .get('/Sauvignon')
+        .expect(200)
+        .end(function (err, res) {
+            assert.error(err, 'No error');
+            assert.end();
+        });
+});
+
 test('API 0: Catalog', function (assert) {
     request(app)
         .get('/api/catalogo/vini')
