@@ -443,7 +443,7 @@ test('API 11: Users info', function (assert) {
         });
 });
 
-test('API 12: Users info', function (assert) {
+test('API 12: User info', function (assert) {
     request(app)
         .get('/api/utenti/TEST')
         .expect('Content-Type', /json/)
