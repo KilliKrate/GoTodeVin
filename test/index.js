@@ -513,3 +513,51 @@ test('API 14.1: Recharge user wallet failed', function (assert) {
             assert.end();
         });
 });
+/*
+test('API 15: convert preorder', function (assert) {
+    request(app)
+        .post('/api/preordine/converti')
+        .expect('Content-Type', /json/)
+        .send({
+            "id": 9,
+            "metodoPagamento": "wallet"
+        })
+        .expect(200)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.risultato,true, 'preorder converted');
+            assert.end();
+        });
+});*/
+
+test('API 15.1: convert preorder failed', function (assert) {
+    request(app)
+        .post('/api/preordine/converti')
+        .expect('Content-Type', /json/)
+        .send({
+            "id": -1,
+            "metodoPagamento": "wallet"
+        })
+        .expect(400)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.risultato,false, 'preorder converted');
+            assert.end();
+        });
+});
+/*
+test('API 15.2: convert preorder failed: insufficant wallet', function (assert) {
+    request(app)
+        .post('/api/preordine/converti')
+        .expect('Content-Type', /json/)
+        .send({
+            "id": 1,
+            "metodoPagamento": "wallet"
+        })
+        .expect(402)
+        .end((err, res) => {
+            assert.error(err, 'No error');
+            assert.same(res.body.risultato,false, 'preorder converted');
+            assert.end();
+        });
+});
