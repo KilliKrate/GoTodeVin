@@ -442,3 +442,17 @@ test('API 11: Users info', function (assert) {
             assert.end();
         });
 });
+
+test('API 12: Users info', function (assert) {
+    request(app)
+        .get('/api/utenti/TEST')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT email, name, saldo FROM Clienti WHERE email='TEST'`).all()[0];
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'Users info found');
+            assert.end();
+        });
+});
