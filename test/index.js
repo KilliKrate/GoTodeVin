@@ -726,9 +726,9 @@ test('API 19.1: edit order status failed', function (assert) {
         .expect(400)
         .end((err, res) => {
             console.log();
-            process.stdout.write("\t");
+            process.stdout.write("\t \u2713  ");
             assert.error(err, 'No error');
-            process.stdout.write("\t");
+            process.stdout.write("\t \u2713  ");
             assert.same(res.text,'ordine inesistente', 'edit status failed');
             assert.end();
         });
