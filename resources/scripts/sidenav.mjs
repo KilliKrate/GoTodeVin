@@ -5,11 +5,13 @@ export async function initUsers() {
     let res = await response.json();
 
     res.forEach(element => {
-        $('.dropdown-menu').append(`
-            <li>
-                <a class="dropdown-item" data-email="${element.email}" href="#">${element.name}</a>
-            </li>
-        `);
+        if(element.email != "TEST"){
+            $('.dropdown-menu').append(`
+                <li>
+                    <a class="dropdown-item" data-email="${element.email}" href="#">${element.name}</a>
+                </li>
+            `);
+        }
     });
 
     $('.dropdown-item').click(function () {
