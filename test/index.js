@@ -422,3 +422,23 @@ test('API 10.2: Create oreder/preorder:: insufficent wallet', function (assert) 
             assert.end();
         });
 });*/
+
+/*
+
+API UTENTI
+
+*/
+
+test('API 11: Users info', function (assert) {
+    request(app)
+        .get('/api/utenti')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {
+            var expectedResult = db.prepare(`SELECT email, name FROM Clienti`).all();
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'Users info found');
+            assert.end();
+        });
+});
