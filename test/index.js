@@ -202,3 +202,71 @@ test('API 6.1: Shopping cart\'s details not found', function (assert) {
             assert.end();
         });
 });
+
+test('API 7: Edit shopping cart', function (assert) {
+    request(app)
+        .post('/api/carrello/modifica')
+        .send({
+            "quantita":8,
+            "nome": "Sauvignon Exclusiv",
+            "email": "TEST"
+        })
+        .expect('Content-Type', /json/)
+        .expect(200) 
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.body.risultato,true, 'shopping cart edited');
+            assert.end();
+        });
+});
+
+test('API 7.1: Update shopping cart', function (assert) {
+    request(app)
+        .get('/api/carrello/TEST')
+        .expect('Content-Type', /json/)
+        .expect(200)
+        .end(function (err, res) {;
+            
+            var expectedResult = {
+                "totale": 280,
+                "elementi": [
+                  {
+                    "vino": "Sauvignon Exclusiv",
+                    "quantita": 8,
+                    "prezzo": 280
+                  },                  
+                ]
+              };
+
+            assert.error(err, 'No error');
+            assert.same(res.body, expectedResult, 'updated quantity');
+            assert.end();
+        });
+});
+
+test('API 7.2: Edit shopping cart error', function (assert) {
+    request(app)
+        .post('/api/carrello/modifica')
+        .expect('Content-Type', /json/)
+        .send({
+            "quantita": 8,
+            "nome": "Sauvign Eclusiv",
+            "email": "TESTASD"
+          })
+        .expect(400)
+        .end((err, res) => {
+
+            if (err) {
+                reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
+            }
+
+            assert.error(err, 'No error');
+            assert.same(res.body.risultato,false, 'shopping cart not edited');
+            assert.end();
+        });
+});
