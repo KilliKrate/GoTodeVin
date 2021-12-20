@@ -1,10 +1,12 @@
 var test = require('tape');
 var request = require('supertest');
 
-let {app,db} = require('../');
+const {app,db} = require('../');
 let idPreorder;
 let wineQuantity;
 let walletValue;
+
+let startTime = new Date();
 
 /*
 
@@ -18,10 +20,10 @@ test('ROUTE: /', function (assert){
         .get('/')
         .expect(200)
         .end(function (err) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -31,10 +33,10 @@ test('ROUTE: /carrello', function (assert){
         .get('/carrello')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /carrello');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -44,10 +46,10 @@ test('ROUTE: /ordini', function (assert){
         .get('/ordini')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /ordini');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -57,10 +59,10 @@ test('ROUTE: /ordini/id', function (assert){
         .get('/ordini/id')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /ordini/id');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -70,10 +72,10 @@ test('ROUTE: /assistenza', function (assert){
         .get('/assistenza')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /assistenza');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -83,10 +85,10 @@ test('ROUTE: /ricarica', function (assert){
         .get('/ricarica')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /ricarica');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -96,10 +98,10 @@ test('ROUTE: /NomeVino', function (assert){
         .get('/Sauvignon')
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Found route /NomeVino');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -110,13 +112,13 @@ test('API 0: Request wine\'s catalog', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT nome, annata, prezzo FROM Vini WHERE disponibilita > 0`).all();
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'Valid list of wines');
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -127,13 +129,13 @@ test('API 1: Search specific wine', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT nome,annata FROM Vini WHERE nome LIKE ? AND annata = ? AND disponibilita > 0`).all('%Sauvignon%',2016);
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'Valid wine');
-            console.log('\n')
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'Valid search result');
+            console.log();
             assert.end();
         });
 });
@@ -144,13 +146,13 @@ test('API 2: Request valid wine\'s details', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT * FROM Vini WHERE nome LIKE 'Sauvignon'`).all()[0];
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'Valid wine');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'Valid wine\'s details');
+            console.log()
             assert.end();
         });
 });
@@ -160,12 +162,12 @@ test('API 2.1: Request invalid wine\'s details', function (assert) {
         .get('/api/catalogo/dettaglio/Sauvgnon')
         .expect(404)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text,'vino non trovato' , 'Invalid wine');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text,'vino non trovato' , 'Invalid wine correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -182,13 +184,13 @@ test('API 3: Operator\'s contacts', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT * FROM Operatori`).all();
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'Valid operator');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'Valid operators');
+            console.log()
             assert.end();
         });
 });
@@ -205,13 +207,13 @@ test('API 4: Valid customer\'s orders', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT id, tipo, stato, totale, data_creazione, data_ritirabile FROM Ordini WHERE cliente='TEST'`).all();
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'valid order');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'valid orders');
+            console.log()
             assert.end();
         });
 });
@@ -221,12 +223,12 @@ test('API 4.1: Invalid customer\'s orders', function (assert) {
         .get('/api/ordini/TEST1')
         .expect(404)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text, 'utente non registrato', 'Invalid order');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text, 'utente non registrato', 'Invalid customer correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -262,12 +264,12 @@ test('API 5: Request valid order\'s details', function (assert) {
                   }
                 ]
             };
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'Valid order');
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -277,12 +279,12 @@ test('API 5.1: Invalid order\'s details', function (assert) {
         .get('/api/ordini/dettaglio/-1')
         .expect(404)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text, 'ordine inesistente', 'Invalid order');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text, 'ordine inesistente', 'Invalid order correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -310,12 +312,12 @@ test('API 6: Valid shopping cart\'s details', function (assert) {
                   },
                 ]
               };
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'Valid user\'s cart');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -325,12 +327,12 @@ test('API 6.1: Invalid shopping cart\'s details', function (assert) {
         .get('/api/carrello/TEST1')
         .expect(404)
         .end(function (err, res) {;
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text, 'utente non registrato', 'Invalid user\'s cart');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text, 'utente non registrato', 'Invalid user\'s cart correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -350,12 +352,12 @@ test('API 7: Edit valid shopping cart', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body.risultato,true, 'Valid shopping cart');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -377,12 +379,12 @@ test('API 7.1: Check update shopping cart', function (assert) {
                   },                  
                 ]
               };
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'check updated quantity');
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -402,12 +404,12 @@ test('API 7.2: Edit invalid shopping cart', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.risultato,false, 'Invalid shopping cart');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.risultato,false, 'Invalid shopping cart correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -425,12 +427,12 @@ test('API 8: Delete valid shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'eliminato', 'Valid shopping cart items');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -444,12 +446,12 @@ test('API 8.1: Check deleted shopping cart\'s items', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'vino non presente nel carrello', 'check deleted shopping cart items');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -463,12 +465,12 @@ test('API 8.2: Delete invalid shopping cart\'s items', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text,'vino non presente nel carrello', ' Invalid shopping cart items');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text,'vino non presente nel carrello', ' Invalid shopping cart items correctly not deleted');
+            console.log()
             assert.end();
         });
 });
@@ -488,12 +490,12 @@ test('API 9: Add valid shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.aggiunto,true, ' valid items');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.aggiunto,true, ' valid items added');
+            console.log()
             assert.end();
         });
 });
@@ -515,12 +517,12 @@ test('API 9.1: Check update shopping cart', function (assert) {
                   },                  
                 ]
               };
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'check added quantity');
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -536,12 +538,12 @@ test('API 9.2: Add invalid shopping cart\'s items', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.aggiunto,false, 'Invalid items');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.aggiunto,false, 'Invalid items correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -562,12 +564,12 @@ test('API 10: Request creation order/preorder', function (assert) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
 
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'ordine creato', 'valid order/preorder');
-            console.log('\n');
+            console.log()
             assert.end();
             idPreorder = db.prepare("SELECT id FROM Ordini WHERE cliente=? AND tipo=?").all("TEST", "P")[0].id;
         });
@@ -579,12 +581,12 @@ test('API 10.1: Check creation order/preorder', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Check creation order/preorder');
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -605,12 +607,12 @@ test('API 10.2: Restore shopping cart\'s items', function (assert) {
             if (err) {
                 reject(new Error('An error occured with the cart\'s editing API, err: ' + err))
             }
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body.aggiunto,true, 'restored shopping cart');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -628,12 +630,12 @@ test('API 11: Request users', function (assert) {
         .expect(200)
         .end(function (err, res) {
             var expectedResult = db.prepare(`SELECT email, name FROM Clienti`).all();
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'Valid user');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'Valid users');
+            console.log()
             assert.end();
         });
 });
@@ -645,12 +647,12 @@ test('API 12: Request user info', function (assert) {
         .expect(200)
         .end(function (err, res) {
             var expectedResult = db.prepare(`SELECT email, name, saldo FROM Clienti WHERE email='TEST'`).all()[0];
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'Valid user');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -661,14 +663,14 @@ test('API 13: Request valid user wallet', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT saldo FROM Clienti WHERE email='TEST'`).all()[0];
             walletValue = expectedResult;
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body, expectedResult, 'Valid user');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -678,12 +680,12 @@ test('API 13.1: Request invalid users Wallet', function (assert) {
         .get('/api/wallet/saldo/TEST1')
         .expect(404)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text, 'email non registrata', 'Invalid user');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text, 'email non registrata', 'Invalid user correctly identified');
+            console.log()
             assert.end();
         });
 });
@@ -698,12 +700,12 @@ test('API 14: Recharge valid user wallet', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body.risposta,true, 'Valid wallet');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -713,14 +715,14 @@ test('API 14.1: Check recharge wallet', function (assert) {
         .get('/api/wallet/saldo/TEST')
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT saldo FROM Clienti WHERE email='TEST'`).all()[0];
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             var diff = walletValue.saldo-expectedResult.saldo;
             assert.same(diff,-15.25, 'Check recharge wallet');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -735,12 +737,12 @@ test('API 14.2: Recharge invalid user wallet', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.risposta,false, 'Invalid wallet');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.risposta,false, 'Invalid wallet correctly deteceted');
+            console.log()
             assert.end();
         });
 });
@@ -755,12 +757,12 @@ test('API 15: convert valid preorder', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.risultato,true, 'Valid preorder');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.risultato,true, 'Valid preorder converted');
+            console.log()
             assert.end();
         });
 });
@@ -771,13 +773,13 @@ test('API 15.1: Check converted order', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body.tipo,'O' ,'Check converted order');
             db.prepare("DELETE FROM Ordini WHERE id=?").run(idPreorder);
-            console.log('\n')
+            console.log();
             assert.end();
         });
 });
@@ -792,18 +794,18 @@ test('API 15.2: Convert invalid preorder', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.risultato,false, 'Invalid preorder');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.risultato,false, 'Invalid preorder correctly identified');
+            console.log()
             assert.end();
         });
 });
 
 /*
-test('API 15.2: convert preorder failed: insufficant wallet', function (assert) {
+test('API 15.2: convert preorder failed: insufficient wallet', function (assert) {
     request(app)
         .post('/api/preordine/converti')
         .expect('Content-Type', /json/)
@@ -826,7 +828,7 @@ test('API 16: Request all orders', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
+            
             var expectedResult = db.prepare(`SELECT * FROM Ordini`).all();
 
             expectedResult.forEach((elem, ind) => {
@@ -834,11 +836,12 @@ test('API 16: Request all orders', function (assert) {
                 vini = db.prepare(sql).all();
                 expectedResult[ind].vini = vini;
             });
-            process.stdout.write("\t \u2713  ");
+
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body, expectedResult, 'Valid order');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body, expectedResult, 'Valid orders');
+            console.log()
             assert.end();
         });
 });
@@ -852,12 +855,12 @@ test('API 17: Request edit quantity', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'vino specificato modificato', 'Valid edit request');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -868,17 +871,17 @@ test('API 17.1: Check edit quantity', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.body.disponibilita, 200, 'Valid order');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.body.disponibilita, 200, 'quantity modified');
+            console.log()
             assert.end();
         });
 });
 
-test('API 17.2: Request edit invalid quantity', function (assert) {
+test('API 17.2: Request edit with invalid quantity', function (assert) {
     request(app)
         .post('/api/gestionale/giacenza')
         .send({
@@ -887,12 +890,12 @@ test('API 17.2: Request edit invalid quantity', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text,'la quantità specificata non è valida', 'Invalid edit request');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text,'la quantità specificata non è valida', 'Invalid edit request correctly blocked');
+            console.log()
             assert.end();
         });
 });
@@ -910,12 +913,12 @@ test('API 18: Request creation wine', function (assert) {
           })
         .expect(200)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'vino inserito', 'wine created');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -932,12 +935,12 @@ test('API 18.2: Check creation wine', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'vino già presente', 'Check creation wine');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -954,12 +957,12 @@ test('API 18.2: Request creation invalid wine', function (assert) {
           })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text,'vino già presente', 'wine not created');
-            console.log('\n');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text,'vino già presente', 'wine correctly not created');
+            console.log()
             assert.end();
             //resetta stato database a prima del test
             db.prepare("DELETE FROM Vini WHERE nome=?").run("Sauvignon riserva");
@@ -978,12 +981,12 @@ test('API 19: edit order status', function (assert) {
         })
         .expect(200)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.text,'ordine modificato', 'status edited');
-            console.log('\n');
+            console.log()
             assert.end();
         });
 });
@@ -994,19 +997,19 @@ test('API 19.1: Check edit status', function (assert) {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function (err, res) {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
+            process.stdout.write("   \u2713  ");
             assert.same(res.body.stato, 'daRitirare', 'Check edit status');
-            console.log('\n');
+            console.log()
             //resetta stato database a prima del test
             db.prepare("UPDATE Ordini SET stato='inLavorazione', qr=NULL, locker=NULL, data_ritirabile=NULL WHERE id=1").run();
             assert.end();
         });
 });
 
-test('API 19.2: edit order status failed', function (assert) {
+test('API 19.2: edit order status with malformed input', function (assert) {
     request(app)
         .post('/api/gestionale/modifica_stato_ordine')
         .send({
@@ -1017,11 +1020,15 @@ test('API 19.2: edit order status failed', function (assert) {
         })
         .expect(400)
         .end((err, res) => {
-            console.log();
-            process.stdout.write("\t \u2713  ");
+            
+            process.stdout.write("   \u2713  ");
             assert.error(err, 'Request completed');
-            process.stdout.write("\t \u2713  ");
-            assert.same(res.text,'ordine inesistente', 'edit status failed');
+            process.stdout.write("   \u2713  ");
+            assert.same(res.text,'ordine inesistente', 'edit status correctly failed');
             assert.end();
+
+            console.log("\nAll tests completed!")
+            console.log("    total: 51");
+            console.log("    time elapsed: "+ (new Date()-startTime) +"ms");
         });
 });
