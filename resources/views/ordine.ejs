@@ -249,13 +249,13 @@
             metodoPagamento: paymentType,
             id: ID,
           }),
-        }).then((response) => console.log(response));
-        if(response.status == 200) location.reload();
-        else{
-        response.text().then(function (text) {
-        alert(text);
+        }).then((response) => response.json())
+        .then((data) => {
+          if(data.risultato) location.reload();
+          else{
+            alert(data.messaggio);
+          }
         });
-        }
       }
 
       await initOrdine();
